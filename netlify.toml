@@ -1,19 +1,13 @@
 [build]
   command = "npm run build"
   publish = ".next"
+  base = ""
 
 [build.environment]
   NODE_VERSION = "20"
 
-[[redirects]]
-  from = "/_next/static/*"
-  to = "/_next/static/:splat"
-  status = 200
-[[redirects]]
-  from = "/_next/data/*"
-  to = "/_next/data/:splat"
-  status = 200
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+[context.production]
+  command = "npm run build"
+
+[context.production.environment]
+  NEXT_TELEMETRY_DISABLED = "1"
