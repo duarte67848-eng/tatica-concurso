@@ -13,14 +13,25 @@ export default function Login() {
   function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     
-    if (email && password) {
-      const user = { email, name: email.split("@")[0] };
-      // Salvar sessão temporária
-      window.sessionStorage.setItem("tatica_user", JSON.stringify(user));
-      router.push("/dashboard");
-    } else {
+    if (!email || !password) {
       setError("Preencha email e senha");
+      return;
     }
+
+    // Verificar usuário cadastrado
+    const savedUsers = localStorage.getItem("tatica_users");
+    if (savedUsers) {
+      const users = JSON.parse(savedUsers);
+      const foundUser = users.find((u: any) => u.email === email);
+      if (foundUser && !foundUser.approved) {
+        setError("Aguarde aprovação do administrador!");
+        return;
+      }
+    }
+
+    const user = { email, name: email.split("@")[0] };
+    window.sessionStorage.setItem("tatica_user", JSON.stringify(user));
+    router.push("/dashboard");
   }
 
   function handleSignUp() {
@@ -34,9 +45,28 @@ export default function Login() {
       return;
     }
 
-    const user = { email, name: email.split("@")[0] };
-    window.sessionStorage.setItem("tatica_user", JSON.stringify(user));
-    router.push("/dashboard");
+    // Verificar se já existe
+    const savedUsers = localStorage.getItem("tatica_users");
+    let users = savedUsers ? JSON.parse(savedUsers) : [];
+    
+    if (users.find((u: any) => u.email === email)) {
+      setError("Usuário já cadastrado! Aguarde aprovação.");
+      return;
+    }
+
+    // Criar novo usuário pendente
+    const newUser = {
+      id: Date.now().toString(),
+      name: email.split("@")[0],
+      email: email,
+      approved: false,
+      created_at: new Date().toISOString()
+    };
+    
+    users.push(newUser);
+    localStorage.setItem("tatica_users", JSON.stringify(users));
+    
+    setError("Cadastro realizado! Aguarde aprovação do administrador.");
   }
 
   return (
