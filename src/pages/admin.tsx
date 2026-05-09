@@ -17,6 +17,8 @@ export default function Admin() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [activeTab, setActiveTab] = useState<"questions">("questions");
   const [loading, setLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [adminPassword, setAdminPassword] = useState("");
   const [newQuestion, setNewQuestion] = useState({
     pergunta: "",
     alternativa_a: "",
@@ -79,6 +81,24 @@ export default function Admin() {
       setQuestions(updated);
       localStorage.setItem("tatica_questions", JSON.stringify(updated));
     }
+  }
+
+  if (!isAuthorized) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "70vh", gap: "1rem" }}>
+        <h1 style={{ color: "#ffd700", fontSize: "1.5rem" }}>ACESSO ADMINISTRATIVO</h1>
+        <input
+          type="password"
+          placeholder="Senha do Admin"
+          value={adminPassword}
+          onChange={(e) => setAdminPassword(e.target.value)}
+          style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "12px", borderRadius: "4px", width: "300px", textAlign: "center" }}
+        />
+        <button onClick={() => { if (adminPassword === "admin123") setIsAuthorized(true); else alert("Senha incorreta!"); }} style={{ background: "#ffd700", color: "#000", fontWeight: "bold", padding: "12px 24px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+          ENTRAR
+        </button>
+      </div>
+    );
   }
 
   if (loading) {
