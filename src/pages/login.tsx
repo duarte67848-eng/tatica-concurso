@@ -18,15 +18,26 @@ export default function Login() {
       return;
     }
 
-    // Verificar usuário cadastrado
+    // Verificar usuário cadastrado - agora exige registro primeiro
     const savedUsers = localStorage.getItem("tatica_users");
-    if (savedUsers) {
-      const users = JSON.parse(savedUsers);
-      const foundUser = users.find((u: any) => u.email === email);
-      if (foundUser && !foundUser.approved) {
-        setError("Aguarde aprovação do administrador!");
-        return;
-      }
+    let users = savedUsers ? JSON.parse(savedUsers) : [];
+    
+    // Se não tiver ninguém cadastrado, nadie pode logar
+    if (users.length === 0) {
+      setError("Nenhum usuário cadastrado. Crie sua conta primeiro.");
+      return;
+    }
+
+    const foundUser = users.find((u: any) => u.email === email);
+    
+    if (!foundUser) {
+      setError("Usuário não cadastrado. Crie sua conta primeiro.");
+      return;
+    }
+
+    if (!foundUser.approved) {
+      setError("Aguarde aprovação do administrador!");
+      return;
     }
 
     const user = { email, name: email.split("@")[0] };
