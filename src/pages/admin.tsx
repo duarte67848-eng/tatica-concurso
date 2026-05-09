@@ -163,6 +163,36 @@ export default function Admin() {
         PAINEL DE ADMINISTRAÇÃO
       </h1>
 
+      {/* ESTATÍSTICAS */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
+        <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem", textAlign: "center" }}>
+          <div style={{ color: "#9ca3af", fontSize: "0.875rem", marginBottom: "0.5rem" }}>TOTAL ALUNOS</div>
+          <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#ffd700" }}>{users.length}</div>
+        </div>
+        <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem", textAlign: "center" }}>
+          <div style={{ color: "#9ca3af", fontSize: "0.875rem", marginBottom: "0.5rem" }}>ATIVOS</div>
+          <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#22c55e" }}>{users.filter(u => u.approved).length}</div>
+        </div>
+        <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem", textAlign: "center" }}>
+          <div style={{ color: "#9ca3af", fontSize: "0.875rem", marginBottom: "0.5rem" }}>PENDENTES</div>
+          <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#ef4444" }}>{users.filter(u => !u.approved).length}</div>
+        </div>
+        <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem", textAlign: "center" }}>
+          <div style={{ color: "#9ca3af", fontSize: "0.875rem", marginBottom: "0.5rem" }}>QUESTÕES</div>
+          <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#3b82f6" }}>{questions.length}</div>
+        </div>
+        <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem", textAlign: "center" }}>
+          <div style={{ color: "#9ca3af", fontSize: "0.875rem", marginBottom: "0.5rem" }}>SIMULADOS</div>
+          <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#a855f7" }}>{results.length}</div>
+        </div>
+        <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem", textAlign: "center" }}>
+          <div style={{ color: "#9ca3af", fontSize: "0.875rem", marginBottom: "0.5rem" }}>MÉDIA PF</div>
+          <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#ffd700" }}>
+            {results.length > 0 ? (results.reduce((acc, r) => acc + parseFloat(r.pf), 0) / results.length).toFixed(2) : "0.00"}
+          </div>
+        </div>
+      </div>
+
       {/* Abas */}
       <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem" }}>
         <button onClick={() => setActiveTab("questions")} style={{ padding: "12px 24px", background: activeTab === "questions" ? "#ffd700" : "#1a1a1a", color: activeTab === "questions" ? "#000" : "#fff", border: "1px solid #333", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
