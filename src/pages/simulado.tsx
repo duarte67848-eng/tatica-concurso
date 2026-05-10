@@ -21,7 +21,7 @@ export default function Simulado() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(true);
-  const [timeLeft, setTimeLeft] = useState(30 * 60);
+  const [timeLeft, setTimeLeft] = useState(240 * 60);
   const [submitted, setSubmitted] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [userName, setUserName] = useState("");
@@ -131,7 +131,7 @@ export default function Simulado() {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
         <h1 style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#ffd700" }}>
-          SIMULADO OPERACIONAL
+          SIMULADO OPERACIONAL - 4 HORAS
         </h1>
         <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#ffd700", background: "#000", border: "1px solid #b8860b", padding: "8px 16px", borderRadius: "4px" }}>
           ⏱️ {formatTime(timeLeft)}
