@@ -30,7 +30,16 @@ interface Result {
   erros: number;
   pf: number;
   total_questoes: number;
+  detalhes?: string;
   criado_em: string;
+}
+
+interface DetalheQuestao {
+  questao_id: string;
+  disciplina: string;
+  resposta_usuario: string;
+  resposta_correta: string;
+  acertou: boolean;
 }
 
 export default function Admin() {
@@ -54,6 +63,7 @@ export default function Admin() {
   });
   const [newStudent, setNewStudent] = useState({ nome: "", email: "" });
   const [showStudentForm, setShowStudentForm] = useState(false);
+  const [expandedResult, setExpandedResult] = useState<number | null>(null);
 
   useEffect(() => {
     loadData();
@@ -388,11 +398,45 @@ export default function Admin() {
                     Acertos: {r.acertos} | Erros: {r.erros} | Questões: {r.total_questoes}
                   </p>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ color: "#6b7280" }}>{new Date(r.criado_em).toLocaleString()}</span>
+                    <button 
+                      onClick={() => setExpandedResult(expandedResult === r.id ? null : r.id)}
+                      style={{ background: "#3b82f6", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer" }}
+                    >
+                      {expandedResult === r.id ? "OCULTAR DETALHES" : "VER DETALHES"}
+                    </button>
                     <button onClick={() => deleteResult(r.id)} style={{ background: "#ef4444", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
                       EXCLUIR
                     </button>
                   </div>
+
+                  {expandedResult === r.id && r.detalhes && (
+                    <div style={{ marginTop: "1rem", padding: "1rem", background: "#0d0d0d", borderRadius: "4px", maxHeight: "400px", overflowY: "auto" }}>
+                      <h3 style={{ color: "#ffd700", marginBottom: "0.5rem" }}>Detalhamento por Questão</h3>
+                      {(() => {
+                        try {
+                          const detalhes: DetalheQuestao[] = JSON.parse(r.detalhes);
+                          return detalhes.map((d, idx) => (
+                            <div key={idx} style={{ padding: "8px", borderBottom: "1px solid #333", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <div>
+                                <span style={{ color: "#9ca3af", fontSize: "0.75rem" }}>{d.disciplina}</span>
+                                <span style={{ marginLeft: "8px", color: "#fff" }}>Q{idx + 1}</span>
+                              </div>
+                              <div>
+                                <span style={{ color: "#fff", marginRight: "8px" }}>
+                                  Sua: <strong style={{ color: d.acertou ? "#22c55e" : "#ef4444" }}>{d.resposta_usuario}</strong>
+                                </span>
+                                <span style={{ color: "#9ca3af" }}>
+                                  Certa: <strong style={{ color: "#22c55e" }}>{d.resposta_correta}</strong>
+                                </span>
+                              </div>
+                            </div>
+                          ));
+                        } catch {
+                          return <div style={{ color: "#ef4444" }}>Erro ao carregar detalhes</div>;
+                        }
+                      })()}
+                    </div>
+                  )}
                 </div>
               ))
             )}

@@ -97,7 +97,15 @@ export default function Simulado() {
 
     const pf = ((clpapScore * 1) + (cpfjmScore * 1.25) + (clipmScore * 1.75) + (cpScore * 2)) / 12;
 
-    // Salvar resultado no Supabase
+    // Salvar resultado detalhado no Supabase
+    const detalhes = questions.map(q => ({
+      questao_id: q.id,
+      disciplina: q.disciplina,
+      resposta_usuario: answers[q.id] || "NÃO RESPONDIDA",
+      resposta_correta: q.resposta_correta,
+      acertou: answers[q.id] === q.resposta_correta
+    }));
+
     await supabase.from("resultado").insert([{
       email_usuario: userEmail,
       nome_usuario: userName,
@@ -105,6 +113,7 @@ export default function Simulado() {
       erros,
       pf,
       total_questoes: questions.length,
+      detalhes: JSON.stringify(detalhes),
       criado_em: new Date().toISOString()
     }]);
 
