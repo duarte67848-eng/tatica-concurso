@@ -211,6 +211,7 @@ export default function App({ Component, pageProps }: AppProps) {
             <nav style={{ display: "flex", gap: "1rem" }}>
               <a href="/dashboard" style={{ color: colors.gold, textDecoration: "none" }}>Dashboard</a>
               <a href="/simulado" style={{ color: colors.gold, textDecoration: "none" }}>Simulado</a>
+              <a href="/exercicios" style={{ color: colors.gold, textDecoration: "none" }}>Exercícios</a>
               <a href="/revisao" style={{ color: colors.gold, textDecoration: "none" }}>Revisão</a>
               <a href="/admin" style={{ color: colors.gold, textDecoration: "none" }}>Admin</a>
             </nav>
