@@ -15,7 +15,19 @@ interface Question {
   peso: number;
 }
 
-export default function Simulado() {
+export default function Simulado({ colors }: { colors?: any }) {
+  const c = colors || {
+    background: "#0d0d0d",
+    backgroundSecondary: "#1a1a1a",
+    backgroundTertiary: "#252525",
+    text: "#ffffff",
+    textSecondary: "#a0a0a0",
+    border: "#333333",
+    gold: "#ffd700",
+    goldHover: "#ffed4a",
+    green: "#22c55e",
+    red: "#ef4444"
+  };
   const router = useRouter();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -130,7 +142,7 @@ export default function Simulado() {
   if (loading) {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "70vh" }}>
-        <div style={{ color: "#ffd700", fontSize: "1.25rem" }}>CARREGANDO QUESTÕES...</div>
+        <div style={{ color: c.gold, fontSize: "1.25rem" }}>CARREGANDO QUESTÕES...</div>
       </div>
     );
   }
@@ -139,24 +151,24 @@ export default function Simulado() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-        <h1 style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#ffd700" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
+        <h1 style={{ fontSize: "1.5rem", fontWeight: "bold", color: c.gold }}>
           SIMULADO OPERACIONAL - 4 HORAS
         </h1>
-        <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#ffd700", background: "#000", border: "1px solid #b8860b", padding: "8px 16px", borderRadius: "4px" }}>
+        <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: c.gold, background: c.background, border: `1px solid ${c.border}`, padding: "8px 16px", borderRadius: "4px" }}>
           ⏱️ {formatTime(timeLeft)}
         </div>
       </div>
 
-      <div style={{ marginBottom: "1rem", color: "#9ca3af" }}>
+      <div style={{ marginBottom: "1rem", color: c.textSecondary }}>
         Questão {currentIndex + 1} de {questions.length}
       </div>
 
-      <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem", marginBottom: "1.5rem" }}>
-        <div style={{ color: "#ffd700", fontSize: "0.875rem", marginBottom: "1rem" }}>
+      <div style={{ background: `linear-gradient(180deg, ${c.backgroundSecondary} 0%, ${c.background} 100%)`, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "1.5rem", marginBottom: "1.5rem" }}>
+        <div style={{ color: c.gold, fontSize: "0.875rem", marginBottom: "1rem" }}>
           DISCIPLINA: {currentQuestion.disciplina} | PESO: {currentQuestion.peso}
         </div>
-        <div style={{ fontSize: "1.25rem", marginBottom: "1.5rem" }}>{currentQuestion.pergunta}</div>
+        <div style={{ fontSize: "1.125rem", marginBottom: "1.5rem", color: c.text, lineHeight: "1.6" }}>{currentQuestion.pergunta}</div>
         
         <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
           {["A", "B", "C", "D", "E"].map((option) => {
@@ -171,26 +183,26 @@ export default function Simulado() {
                   textAlign: "left",
                   padding: "1rem",
                   borderRadius: "4px",
-                  border: isSelected ? "1px solid #ffd700" : "1px solid #374151",
-                  background: isSelected ? "rgba(255, 215, 0, 0.3)" : "transparent",
-                  color: isSelected ? "#fff" : "#d1d5db",
+                  border: isSelected ? `1px solid ${c.gold}` : `1px solid ${c.border}`,
+                  background: isSelected ? "rgba(255, 215, 0, 0.2)" : "transparent",
+                  color: c.text,
                   cursor: "pointer",
                   transition: "all 0.2s"
                 }}
               >
-                <span style={{ fontWeight: "bold", color: "#ffd700", marginRight: "0.5rem" }}>{option})</span>
-                {text}
+                <span style={{ fontWeight: "bold", color: c.gold, marginRight: "0.5rem" }}>{option})</span>
+                <span style={{ color: c.text }}>{text}</span>
               </button>
             );
           })}
         </div>
       </div>
 
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
         <button
           onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
           disabled={currentIndex === 0}
-          style={{ padding: "12px 24px", border: "1px solid #4b5563", color: "#9ca3af", borderRadius: "4px", background: "transparent", cursor: currentIndex === 0 ? "not-allowed" : "pointer", opacity: currentIndex === 0 ? 0.5 : 1 }}
+          style={{ padding: "12px 24px", border: `1px solid ${c.border}`, color: c.textSecondary, borderRadius: "4px", background: "transparent", cursor: currentIndex === 0 ? "not-allowed" : "pointer", opacity: currentIndex === 0 ? 0.5 : 1 }}
         >
           ← ANTERIOR
         </button>
@@ -198,14 +210,14 @@ export default function Simulado() {
         {currentIndex === questions.length - 1 ? (
           <button
             onClick={handleSubmit}
-            style={{ background: "linear-gradient(180deg, #ffd700 0%, #b8860b 100%)", color: "#000", fontWeight: "bold", padding: "12px 24px", borderRadius: "4px", border: "none", cursor: "pointer", textTransform: "uppercase", letterSpacing: "1px" }}
+            style={{ background: `linear-gradient(180deg, ${c.gold} 0%, ${c.goldHover} 100%)`, color: "#000", fontWeight: "bold", padding: "12px 24px", borderRadius: "4px", border: "none", cursor: "pointer", textTransform: "uppercase", letterSpacing: "1px" }}
           >
             FINALIZAR SIMULADO
           </button>
         ) : (
           <button
             onClick={() => setCurrentIndex(Math.min(questions.length - 1, currentIndex + 1))}
-            style={{ padding: "12px 24px", border: "1px solid #b8860b", color: "#ffd700", borderRadius: "4px", background: "transparent", cursor: "pointer" }}
+            style={{ padding: "12px 24px", border: `1px solid ${c.gold}`, color: c.gold, borderRadius: "4px", background: "transparent", cursor: "pointer" }}
           >
             PRÓXIMA →
           </button>

@@ -56,7 +56,7 @@ export function getCurrentDateTimeCuiaba(): { data: string; hora: string; comple
   };
 }
 
-export function useTheme() {
+function useTheme() {
   const [isDark, setIsDark] = useState(true);
   const [colors, setColors] = useState({
     background: "#0d0d0d",
@@ -91,12 +91,12 @@ export function useTheme() {
       blue: "#3b82f6",
       purple: "#a855f7"
     } : {
-      background: "#f5f5f5",
-      backgroundSecondary: "#ffffff",
-      backgroundTertiary: "#e5e5e5",
+      background: "#ffffff",
+      backgroundSecondary: "#f5f5f5",
+      backgroundTertiary: "#e8e8e8",
       text: "#1a1a1a",
-      textSecondary: "#666666",
-      border: "#d4d4d4",
+      textSecondary: "#555555",
+      border: "#cccccc",
       gold: "#b8860b",
       goldHover: "#daa520",
       green: "#16a34a",
@@ -124,12 +124,12 @@ export function useTheme() {
       blue: "#3b82f6",
       purple: "#a855f7"
     } : {
-      background: "#f5f5f5",
-      backgroundSecondary: "#ffffff",
-      backgroundTertiary: "#e5e5e5",
+      background: "#ffffff",
+      backgroundSecondary: "#f5f5f5",
+      backgroundTertiary: "#e8e8e8",
       text: "#1a1a1a",
-      textSecondary: "#666666",
-      border: "#d4d4d4",
+      textSecondary: "#555555",
+      border: "#cccccc",
       gold: "#b8860b",
       goldHover: "#daa520",
       green: "#16a34a",
@@ -164,6 +164,20 @@ export default function App({ Component, pageProps }: AppProps) {
       fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
       transition: "background 0.3s, color 0.3s"
     }}>
+      <style>{`
+        body { 
+          background-color: ${colors.background};
+          color: ${colors.text};
+        }
+        input, textarea, select {
+          background-color: ${colors.background} !important;
+          color: ${colors.text} !important;
+          border-color: ${colors.border} !important;
+        }
+        a { color: ${colors.gold} !important; }
+        .question-text { color: ${colors.text} !important; }
+        .option-text { color: ${colors.text} !important; }
+      `}</style>
       <header style={{ 
         background: colors.backgroundSecondary, 
         borderBottom: `1px solid ${colors.border}`, 
@@ -189,10 +203,7 @@ export default function App({ Component, pageProps }: AppProps) {
                 padding: "8px 16px",
                 borderRadius: "4px",
                 cursor: "pointer",
-                fontSize: "0.875rem",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px"
+                fontSize: "0.875rem"
               }}
             >
               {isDark ? "☀️ Claro" : "🌙 Escuro"}
