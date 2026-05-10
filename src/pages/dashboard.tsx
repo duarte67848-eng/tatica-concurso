@@ -13,14 +13,63 @@ interface Result {
   erros: number;
   pf: number;
   total_questoes: number;
+  detalhes?: string;
   criado_em: string;
 }
 
-export default function Dashboard() {
+interface DetalheQuestao {
+  questao_id: string;
+  disciplina: string;
+  resposta_usuario: string;
+  resposta_correta: string;
+  acertou: boolean;
+}
+
+interface DashboardProps {
+  colors?: any;
+  isDark?: boolean;
+  toggleTheme?: () => void;
+}
+
+function formatDateTimeCuiaba(dateStr: string): string {
+  const date = new Date(dateStr);
+  return new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Cuiaba",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(date);
+}
+
+function getWeekOfMonth(date: Date): number {
+  const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+  const pastDaysOfMonth = (date.getTime() - firstDay.getTime()) / 86400000;
+  return Math.ceil((pastDaysOfMonth + firstDay.getDay() + 1) / 7);
+}
+
+export default function Dashboard({ colors }: DashboardProps) {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [results, setResults] = useState<Result[]>([]);
+  const [activeTab, setActiveTab] = useState<"resumo" | "estatisticas" | "historico" | "analise">("resumo");
+
+  const c = colors || {
+    background: "#0d0d0d",
+    backgroundSecondary: "#1a1a1a",
+    backgroundTertiary: "#252525",
+    text: "#ffffff",
+    textSecondary: "#a0a0a0",
+    border: "#333333",
+    gold: "#ffd700",
+    goldHover: "#b8860b",
+    green: "#22c55e",
+    red: "#ef4444",
+    blue: "#3b82f6",
+    purple: "#a855f7"
+  };
 
   useEffect(() => {
     const userData = window.sessionStorage.getItem("tatica_user");
@@ -44,100 +93,488 @@ export default function Dashboard() {
     setLoading(false);
   }
 
-  const totalSimulados = results.length;
-  const melhorPF = results.length > 0 ? Math.max(...results.map(r => r.pf)) : 0;
-  const mediaPF = results.length > 0 ? (results.reduce((acc, r) => acc + r.pf, 0) / results.length) : 0;
-
   function handleLogout() {
     window.sessionStorage.removeItem("tatica_user");
     router.push("/login");
   }
 
+  const totalSimulados = results.length;
+  const melhorPF = results.length > 0 ? Math.max(...results.map(r => r.pf)) : 0;
+  const mediaPF = results.length > 0 ? (results.reduce((acc, r) => acc + r.pf, 0) / results.length) : 0;
+  const ultimoPF = results.length > 0 ? results[0].pf : 0;
+  const totalAcertos = results.reduce((acc, r) => acc + r.acertos, 0);
+  const totalErros = results.reduce((acc, r) => acc + r.erros, 0);
+  const totalQuestoes = results.reduce((acc, r) => acc + r.total_questoes, 0);
+  const percentualGeral = totalQuestoes > 0 ? ((totalAcertos / totalQuestoes) * 100) : 0;
+
+  const getBlockPerformance = () => {
+    const blocks: { [key: string]: { acertos: number; total: number } } = { 
+      CLPAP: { acertos: 0, total: 0 }, 
+      CPJM: { acertos: 0, total: 0 }, 
+      CLIPM: { acertos: 0, total: 0 }, 
+      CP: { acertos: 0, total: 0 } 
+    };
+    
+    results.forEach(r => {
+      if (r.detalhes) {
+        try {
+          const detalhes: DetalheQuestao[] = JSON.parse(r.detalhes);
+          detalhes.forEach((d: DetalheQuestao) => {
+            if (d.disciplina && blocks[d.disciplina]) {
+              blocks[d.disciplina].total++;
+              if (d.acertou) blocks[d.disciplina].acertos++;
+            }
+          });
+        } catch {}
+      }
+    });
+    
+    return blocks;
+  };
+
+  const blockStats = getBlockPerformance();
+
+  const getEvolutionData = () => {
+    const weekly: { [key: string]: number[] } = {};
+    results.forEach(r => {
+      const date = new Date(r.criado_em);
+      const week = `${date.getFullYear()}-W${getWeekOfMonth(date)}`;
+      if (!weekly[week]) weekly[week] = [];
+      weekly[week].push(r.pf);
+    });
+    
+    const evolution = Object.entries(weekly).map(([week, pfs]) => ({
+      week,
+      media: pfs.reduce((a, b) => a + b, 0) / pfs.length,
+      melhor: Math.max(...pfs)
+    })).reverse();
+    
+    return evolution;
+  };
+
+  const evolution = getEvolutionData();
+  const tendencia = evolution.length >= 2 ? (evolution[evolution.length - 1].media - evolution[0].media).toFixed(2) : "0.00";
+
+  const getRanking = async () => {
+    const { data } = await supabase
+      .from("resultado")
+      .select("nome_usuario, pf")
+      .order("pf", { ascending: false })
+      .limit(50);
+    
+    if (data) {
+      const myRank = data.findIndex((r: any) => r.nome_usuario === user?.name);
+      return myRank >= 0 ? myRank + 1 : null;
+    }
+    return null;
+  };
+
+  const [ranking, setRanking] = useState<number | null>(null);
+  useEffect(() => {
+    getRanking().then(setRanking);
+  }, [results]);
+
+  const getRadarData = () => {
+    return [
+      { label: "CLPAP", value: blockStats.CLPAP.total > 0 ? (blockStats.CLPAP.acertos / blockStats.CLPAP.total) * 100 : 0 },
+      { label: "CPJM", value: blockStats.CPJM.total > 0 ? (blockStats.CPJM.acertos / blockStats.CPJM.total) * 100 : 0 },
+      { label: "CLIPM", value: blockStats.CLIPM.total > 0 ? (blockStats.CLIPM.acertos / blockStats.CLIPM.total) * 100 : 0 },
+      { label: "CP", value: blockStats.CP.total > 0 ? (blockStats.CP.acertos / blockStats.CP.total) * 100 : 0 },
+    ];
+  };
+
+  const radarData = getRadarData();
+
   if (loading) {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "70vh" }}>
-        <div style={{ color: "#ffd700", fontSize: "1.25rem" }}>CARREGANDO...</div>
+        <div style={{ color: c.gold, fontSize: "1.25rem" }}>CARREGANDO DASHBOARD...</div>
       </div>
     );
   }
 
+  const Card = ({ title, value, subtitle, color }: { title: string; value: string | number; subtitle?: string; color?: string }) => (
+    <div style={{ 
+      background: `linear-gradient(180deg, ${c.backgroundSecondary} 0%, ${c.background} 100%)`, 
+      border: `1px solid ${c.border}`, 
+      borderRadius: "8px", 
+      padding: "1.25rem", 
+      textAlign: "center" 
+    }}>
+      <div style={{ color: c.textSecondary, fontSize: "0.75rem", marginBottom: "0.5rem" }}>{title}</div>
+      <div style={{ fontSize: "2rem", fontWeight: "bold", color: color || c.gold }}>{value}</div>
+      {subtitle && <div style={{ color: c.textSecondary, fontSize: "0.7rem", marginTop: "0.25rem" }}>{subtitle}</div>}
+    </div>
+  );
+
+  const BlockBar = ({ name, acertos, total }: { name: string; acertos: number; total: number }) => {
+    const pct = total > 0 ? (acertos / total) * 100 : 0;
+    const barColor = pct >= 70 ? c.green : pct >= 50 ? c.gold : c.red;
+    return (
+      <div style={{ marginBottom: "1rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.25rem" }}>
+          <span style={{ color: c.text, fontWeight: "bold" }}>{name}</span>
+          <span style={{ color: barColor }}>{acertos}/{total} ({pct.toFixed(0)}%)</span>
+        </div>
+        <div style={{ height: "8px", background: c.backgroundTertiary, borderRadius: "4px", overflow: "hidden" }}>
+          <div style={{ width: `${pct}%`, height: "100%", background: barColor, borderRadius: "4px", transition: "width 0.3s" }} />
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div>
-      <h1 style={{ fontSize: "1.875rem", fontWeight: "bold", color: "#ffd700", marginBottom: "2rem" }}>
-        DASHBOARD OPERACIONAL
-      </h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
+        <h1 style={{ fontSize: "1.875rem", fontWeight: "bold", color: c.gold }}>
+          DASHBOARD ESTRATÉGICO
+        </h1>
+        <button onClick={handleLogout} style={{ background: c.red, color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer", fontWeight: "bold" }}>
+          SAIR
+        </button>
+      </div>
 
       {user && (
-        <div style={{ marginBottom: "2rem", padding: "1rem", background: "#1a1a1a", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <span style={{ color: "#9ca3af" }}>Bem-vindo, </span>
-            <span style={{ color: "#ffd700", fontWeight: "bold" }}>{user.name}</span>
-          </div>
-          <button onClick={handleLogout} style={{ background: "#ef4444", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer", fontWeight: "bold" }}>
-            SAIR
-          </button>
+        <div style={{ marginBottom: "1.5rem", padding: "1rem", background: c.backgroundSecondary, borderRadius: "8px", border: `1px solid ${c.border}` }}>
+          <span style={{ color: c.textSecondary }}>Operador: </span>
+          <span style={{ color: c.gold, fontWeight: "bold" }}>{user.name}</span>
+          {ranking && (
+            <span style={{ marginLeft: "1rem", color: c.textSecondary }}>
+              | Ranking Geral: <span style={{ color: c.blue, fontWeight: "bold" }}>#{ranking}</span>
+            </span>
+          )}
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1.5rem", marginBottom: "2rem" }}>
-        <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem", textAlign: "center" }}>
-          <div style={{ color: "#9ca3af", fontSize: "0.875rem", marginBottom: "0.5rem" }}>TOTAL SIMULADOS</div>
-          <div style={{ fontSize: "2.25rem", fontWeight: "bold", color: "#ffd700" }}>{totalSimulados}</div>
-        </div>
-        
-        <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem", textAlign: "center" }}>
-          <div style={{ color: "#9ca3af", fontSize: "0.875rem", marginBottom: "0.5rem" }}>MELHOR PF</div>
-          <div style={{ fontSize: "2.25rem", fontWeight: "bold", color: "#22c55e" }}>{melhorPF.toFixed(2)}</div>
-        </div>
-        
-        <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem", textAlign: "center" }}>
-          <div style={{ color: "#9ca3af", fontSize: "0.875rem", marginBottom: "0.5rem" }}>MÉDIA PF</div>
-          <div style={{ fontSize: "2.25rem", fontWeight: "bold", color: "#3b82f6" }}>{mediaPF.toFixed(2)}</div>
-        </div>
-        
-        <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem", textAlign: "center" }}>
-          <div style={{ color: "#9ca3af", fontSize: "0.875rem", marginBottom: "0.5rem" }}>ÚLTIMO ACESSO</div>
-          <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#fff" }}>{results.length > 0 ? new Date(results[0].criado_em).toLocaleDateString() : "-"}</div>
-        </div>
-      </div>
-
-      <div style={{ marginBottom: "2rem" }}>
-        <h2 style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#ffd700", marginBottom: "1rem" }}>INICIAR NOVO SIMULADO</h2>
-        <Link href="/simulado">
-          <button style={{ background: "linear-gradient(180deg, #ffd700 0%, #b8860b 100%)", color: "#000", fontWeight: "bold", padding: "12px 24px", borderRadius: "4px", border: "none", cursor: "pointer", textTransform: "uppercase", letterSpacing: "1px", fontSize: "1.125rem" }}>
-            INICIAR SIMULADO AGORA
+      <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
+        {[
+          { key: "resumo", label: "📊 Resumo" },
+          { key: "estatisticas", label: "📈 Estatísticas" },
+          { key: "historico", label: "📋 Histórico" },
+          { key: "analise", label: "🎯 Análise" }
+        ].map(tab => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key as any)}
+            style={{
+              padding: "10px 20px",
+              background: activeTab === tab.key ? c.gold : c.backgroundTertiary,
+              color: activeTab === tab.key ? "#000" : c.text,
+              border: `1px solid ${c.border}`,
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontWeight: "bold",
+              fontSize: "0.875rem"
+            }}
+          >
+            {tab.label}
           </button>
-        </Link>
+        ))}
       </div>
 
-      <div>
-        <h2 style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#ffd700", marginBottom: "1rem" }}>MEU HISTÓRICO DE RESULTADOS</h2>
-        
-        {results.length === 0 ? (
-          <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "2rem", textAlign: "center", color: "#9ca3af" }}>
-            Nenhum simulado realizado ainda. Inicie seu primeiro simulado!
+      {activeTab === "resumo" && (
+        <>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
+            <Card title="PF ATUAL" value={ultimoPF.toFixed(2)} subtitle="Último simulado" color={c.gold} />
+            <Card title="MELHOR PF" value={melhorPF.toFixed(2)} subtitle="Recorde pessoal" color={c.green} />
+            <Card title="MÉDIA PF" value={mediaPF.toFixed(2)} subtitle=" média geral" color={c.blue} />
+            <Card title="SIMULADOS" value={totalSimulados} subtitle="Total realizado" color={c.purple} />
+            <Card title="ACERTOS" value={totalAcertos} subtitle={`${percentualGeral.toFixed(1)}% overall`} color={c.green} />
+            <Card title="ERROS" value={totalErros} subtitle="Para revisar" color={c.red} />
           </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            {results.map((r) => (
-              <div key={r.id} style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1rem" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                  <span style={{ color: "#9ca3af", fontSize: "0.875rem" }}>
-                    {new Date(r.criado_em).toLocaleString()}
-                  </span>
-                  <span style={{ color: "#ffd700", fontWeight: "bold", fontSize: "1.5rem" }}>
-                    PF: {r.pf.toFixed(2)}
-                  </span>
-                </div>
-                <div style={{ display: "flex", gap: "2rem", color: "#d1d5db" }}>
-                  <span>✅ Acertos: <strong style={{ color: "#22c55e" }}>{r.acertos}</strong></span>
-                  <span>❌ Erros: <strong style={{ color: "#ef4444" }}>{r.erros}</strong></span>
-                  <span>📝 Questões: <strong>{r.total_questoes}</strong></span>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.5rem", marginBottom: "1.5rem" }}>
+            <div style={{ background: c.backgroundSecondary, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "1.5rem" }}>
+              <h3 style={{ color: c.gold, marginBottom: "1rem", fontWeight: "bold" }}>DESEMPENHO POR BLOCO</h3>
+              <BlockBar name="CLPAP (Peso 1.0)" acertos={blockStats.CLPAP.acertos} total={blockStats.CLPAP.total} />
+              <BlockBar name="CPJM (Peso 1.25)" acertos={blockStats.CPJM.acertos} total={blockStats.CPJM.total} />
+              <BlockBar name="CLIPM (Peso 1.75)" acertos={blockStats.CLIPM.acertos} total={blockStats.CLIPM.total} />
+              <BlockBar name="CP (Peso 2.0)" acertos={blockStats.CP.acertos} total={blockStats.CP.total} />
+            </div>
+
+            <div style={{ background: c.backgroundSecondary, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "1.5rem" }}>
+              <h3 style={{ color: c.gold, marginBottom: "1rem", fontWeight: "bold" }}>RADAR ESTRATÉGICO</h3>
+              <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "200px" }}>
+                <div style={{ position: "relative", width: "180px", height: "180px" }}>
+                  {[0, 25, 50, 75, 100].map(pct => (
+                    <div key={pct} style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)", width: `${pct * 0.9}%`, height: `${pct * 0.9}%`, border: `1px dashed ${c.border}`, borderRadius: "50%", opacity: 0.5 }} />
+                  ))}
+                  {radarData.map((item, idx) => {
+                    const angle = (idx * 90 - 90) * (Math.PI / 180);
+                    const radius = (item.value / 100) * 80;
+                    const x = 90 + radius * Math.cos(angle);
+                    const y = 90 + radius * Math.sin(angle);
+                    return (
+                      <div key={idx} style={{ position: "absolute", left: `${x}px`, top: `${y}px`, width: "12px", height: "12px", borderRadius: "50%", background: c.gold, transform: "translate(-50%, -50%)" }} />
+                    );
+                  })}
+                  <div style={{ position: "absolute", left: "50%", top: "5px", transform: "translateX(-50%)", color: c.textSecondary, fontSize: "0.7rem" }}>CLPAP</div>
+                  <div style={{ position: "absolute", right: "5px", top: "50%", transform: "translateY(-50%)", color: c.textSecondary, fontSize: "0.7rem" }}>CPJM</div>
+                  <div style={{ position: "absolute", left: "50%", bottom: "5px", transform: "translateX(-50%)", color: c.textSecondary, fontSize: "0.7rem" }}>CP</div>
+                  <div style={{ position: "absolute", left: "5px", top: "50%", transform: "translateY(-50%)", color: c.textSecondary, fontSize: "0.7rem" }}>CLIPM</div>
                 </div>
               </div>
-            ))}
+              <div style={{ display: "flex", justifyContent: "space-around", marginTop: "0.5rem" }}>
+                {radarData.map(item => (
+                  <div key={item.label} style={{ textAlign: "center" }}>
+                    <div style={{ color: c.text, fontWeight: "bold", fontSize: "0.875rem" }}>{item.label}</div>
+                    <div style={{ color: c.gold, fontSize: "0.75rem" }}>{item.value.toFixed(0)}%</div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        )}
+
+          <div style={{ background: c.backgroundSecondary, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "1.5rem", marginBottom: "1.5rem" }}>
+            <h3 style={{ color: c.gold, marginBottom: "1rem", fontWeight: "bold" }}>EVOLUÇÃO SEMANAL</h3>
+            {evolution.length > 0 ? (
+              <div style={{ display: "flex", alignItems: "flex-end", gap: "0.5rem", height: "120px" }}>
+                {evolution.map((e, idx) => (
+                  <div key={idx} style={{ flex: 1, textAlign: "center" }}>
+                    <div style={{ 
+                      height: `${(e.media / 10) * 100}px`, 
+                      background: `linear-gradient(180deg, ${c.gold} 0%, ${c.goldHover} 100%)`, 
+                      borderRadius: "4px 4px 0 0",
+                      marginBottom: "0.25rem"
+                    }} />
+                    <div style={{ color: c.textSecondary, fontSize: "0.6rem" }}>{e.week.slice(-2)}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ color: c.textSecondary, textAlign: "center" }}>Faça mais simulados para ver evolução</div>
+            )}
+            <div style={{ marginTop: "1rem", textAlign: "center" }}>
+              <span style={{ color: parseFloat(tendencia) >= 0 ? c.green : c.red, fontWeight: "bold" }}>
+                {parseFloat(tendencia) >= 0 ? "↗" : "↘"} Tendência: {parseFloat(tendencia) > 0 ? "+" : ""}{tendencia}
+              </span>
+            </div>
+          </div>
+        </>
+      )}
+
+      {activeTab === "estatisticas" && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem" }}>
+          <div style={{ background: c.backgroundSecondary, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "1.5rem" }}>
+            <h3 style={{ color: c.gold, marginBottom: "1rem" }}>Taxa de Acerto</h3>
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", marginBottom: "1rem" }}>
+              <div style={{ 
+                width: "120px", 
+                height: "120px", 
+                borderRadius: "50%", 
+                background: `conic-gradient(${c.green} ${percentualGeral * 3.6}deg, ${c.backgroundTertiary} 0deg)`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }}>
+                <div style={{ 
+                  width: "90px", 
+                  height: "90px", 
+                  borderRadius: "50%", 
+                  background: c.backgroundSecondary,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexDirection: "column"
+                }}>
+                  <span style={{ color: c.gold, fontSize: "1.5rem", fontWeight: "bold" }}>{percentualGeral.toFixed(1)}%</span>
+                </div>
+              </div>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-around" }}>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ color: c.green, fontSize: "1.25rem", fontWeight: "bold" }}>{totalAcertos}</div>
+                <div style={{ color: c.textSecondary, fontSize: "0.75rem" }}>Acertos</div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ color: c.red, fontSize: "1.25rem", fontWeight: "bold" }}>{totalErros}</div>
+                <div style={{ color: c.textSecondary, fontSize: "0.75rem" }}>Erros</div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ color: c.text, fontSize: "1.25rem", fontWeight: "bold" }}>{totalQuestoes}</div>
+                <div style={{ color: c.textSecondary, fontSize: "0.75rem" }}>Total</div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ background: c.backgroundSecondary, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "1.5rem" }}>
+            <h3 style={{ color: c.gold, marginBottom: "1rem" }}>Heatmap de Desempenho</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.5rem" }}>
+              {Object.entries(blockStats).map(([block, stats]) => {
+                const pct = stats.total > 0 ? (stats.acertos / stats.total) * 100 : 0;
+                const bg = pct >= 70 ? c.green : pct >= 50 ? c.gold : c.red;
+                return (
+                  <div key={block} style={{ 
+                    padding: "1rem", 
+                    background: bg, 
+                    borderRadius: "4px", 
+                    textAlign: "center"
+                  }}>
+                    <div style={{ color: "#000", fontWeight: "bold" }}>{block}</div>
+                    <div style={{ color: "#000", fontSize: "0.875rem" }}>{pct.toFixed(0)}%</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div style={{ background: c.backgroundSecondary, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "1.5rem" }}>
+            <h3 style={{ color: c.gold, marginBottom: "1rem" }}>Estatísticas Detalhadas</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: c.textSecondary }}>Questões Respondidas</span>
+                <span style={{ color: c.text, fontWeight: "bold" }}>{totalQuestoes}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: c.textSecondary }}>Questões Acertadas</span>
+                <span style={{ color: c.green, fontWeight: "bold" }}>{totalAcertos}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: c.textSecondary }}>Questões Erradas</span>
+                <span style={{ color: c.red, fontWeight: "bold" }}>{totalErros}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: c.textSecondary }}>Média por Simulado</span>
+                <span style={{ color: c.text, fontWeight: "bold" }}>{(totalQuestoes / totalSimulados || 0).toFixed(0)}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: c.textSecondary }}>Melhor Desempenho</span>
+                <span style={{ color: c.green, fontWeight: "bold" }}>{melhorPF.toFixed(2)}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: c.textSecondary }}>Pior Desempenho</span>
+                <span style={{ color: c.red, fontWeight: "bold" }}>{results.length > 0 ? Math.min(...results.map(r => r.pf)).toFixed(2) : "-"}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "historico" && (
+        <div>
+          <h3 style={{ color: c.gold, marginBottom: "1rem" }}>Histórico Completo</h3>
+          {results.length === 0 ? (
+            <div style={{ background: c.backgroundSecondary, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "2rem", textAlign: "center", color: c.textSecondary }}>
+              Nenhum simulado realizado ainda.
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              {results.map((r, idx) => (
+                <div key={r.id} style={{ 
+                  background: c.backgroundSecondary, 
+                  border: `1px solid ${c.border}`, 
+                  borderRadius: "8px", 
+                  padding: "1rem",
+                  borderLeft: idx === 0 ? `4px solid ${c.gold}` : `1px solid ${c.border}`
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", flexWrap: "wrap", gap: "0.5rem" }}>
+                    <span style={{ color: c.textSecondary, fontSize: "0.875rem" }}>
+                      {formatDateTimeCuiaba(r.criado_em)}
+                    </span>
+                    <span style={{ color: c.gold, fontWeight: "bold", fontSize: "1.25rem" }}>
+                      PF: {r.pf.toFixed(2)}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
+                    <span style={{ color: c.green }}>
+                      ✅ {r.acertos} acertos
+                    </span>
+                    <span style={{ color: c.red }}>
+                      ❌ {r.erros} erros
+                    </span>
+                    <span style={{ color: c.text }}>
+                      📝 {r.total_questoes} questões
+                    </span>
+                    <span style={{ color: c.blue }}>
+                      {((r.acertos / r.total_questoes) * 100).toFixed(1)}% acerto
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === "analise" && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.5rem" }}>
+          <div style={{ background: c.backgroundSecondary, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "1.5rem" }}>
+            <h3 style={{ color: c.gold, marginBottom: "1rem" }}>Estimativa de Aprovação</h3>
+            <div style={{ textAlign: "center", padding: "1rem" }}>
+              <div style={{ fontSize: "3rem", fontWeight: "bold", color: percentualGeral >= 60 ? c.green : percentualGeral >= 40 ? c.gold : c.red }}>
+                {percentualGeral >= 70 ? "ALTO" : percentualGeral >= 50 ? "MÉDIO" : "BAIXO"}
+              </div>
+              <div style={{ color: c.textSecondary, marginTop: "0.5rem" }}>
+                {percentualGeral >= 70 ? "Você está bem posicionado!" : percentualGeral >= 50 ? "Continue estudando!" : "Revise seus pontos fracos!"}
+              </div>
+              <div style={{ marginTop: "1rem", color: c.textSecondary, fontSize: "0.875rem" }}>
+                Baseado no seu desempenho geral
+              </div>
+            </div>
+          </div>
+
+          <div style={{ background: c.backgroundSecondary, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "1.5rem" }}>
+            <h3 style={{ color: c.gold, marginBottom: "1rem" }}>Disciplinas Críticas</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              {Object.entries(blockStats)
+                .sort(([, a], [, b]) => (a.total > 0 ? a.acertos/a.total : 1) - (b.total > 0 ? b.acertos/b.total : 1))
+                .map(([block, stats]) => {
+                  const pct = stats.total > 0 ? (stats.acertos / stats.total) * 100 : 0;
+                  const critical = pct < 50;
+                  return (
+                    <div key={block} style={{ 
+                      padding: "0.75rem", 
+                      background: critical ? `${c.red}20` : "transparent", 
+                      borderRadius: "4px",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center"
+                    }}>
+                      <span style={{ color: c.text, fontWeight: "bold" }}>{block}</span>
+                      <span style={{ color: critical ? c.red : c.green, fontWeight: "bold" }}>
+                        {stats.total > 0 ? `${pct.toFixed(0)}%` : "Sem dados"}
+                        {critical && " ⚠️"}
+                      </span>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+
+          <div style={{ background: c.backgroundSecondary, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "1.5rem" }}>
+            <h3 style={{ color: c.gold, marginBottom: "1rem" }}>Recomendação Estratégica</h3>
+            <div style={{ color: c.text, lineHeight: "1.6" }}>
+              {totalSimulados === 0 ? (
+                <p>Inicie seu primeiro simulado para receber recomendações personalizadas!</p>
+              ) : (
+                <>
+                  <p>✅ <strong style={{ color: c.green }}>Pontos fortes:</strong> Continue mantendo o desempenho nos blocos que você tem bom resultado.</p>
+                  <p style={{ marginTop: "0.75rem" }}>⚠️ <strong style={{ color: c.red }}>Pontos fracos:</strong> Foque nos blocos com menor taxa de acerto para melhorar sua PF.</p>
+                  <p style={{ marginTop: "0.75rem" }}>📈 <strong style={{ color: c.blue }}>Evolução:</strong> {Number(tendencia) >= 0 ? "Você está melhorando!" : "Mantenha a frequência nos estudos."}</p>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div style={{ marginTop: "2rem", textAlign: "center" }}>
+        <Link href="/simulado">
+          <button style={{ 
+            background: `linear-gradient(180deg, ${c.gold} 0%, ${c.goldHover} 100%)`, 
+            color: "#000", 
+            fontWeight: "bold", 
+            padding: "16px 32px", 
+            borderRadius: "4px", 
+            border: "none", 
+            cursor: "pointer", 
+            textTransform: "uppercase", 
+            letterSpacing: "1px", 
+            fontSize: "1.125rem"
+          }}>
+            🚀 INICIAR NOVO SIMULADO
+          </button>
+        </Link>
       </div>
     </div>
   );
