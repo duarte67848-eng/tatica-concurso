@@ -50,6 +50,8 @@ export default function Admin() {
     disciplina: "CLPAP",
     peso: "1.0"
   });
+  const [newStudent, setNewStudent] = useState({ name: "", email: "" });
+  const [showStudentForm, setShowStudentForm] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -128,6 +130,26 @@ export default function Admin() {
       setResults(updated);
       localStorage.setItem("tatica_results", JSON.stringify(updated));
     }
+  }
+
+  function createStudent() {
+    if (!newStudent.name || !newStudent.email) {
+      alert("Preencha nome e email!");
+      return;
+    }
+    const student: User = {
+      id: Date.now().toString(),
+      name: newStudent.name,
+      email: newStudent.email,
+      approved: false,
+      created_at: new Date().toISOString()
+    };
+    const updated = [student, ...users];
+    setUsers(updated);
+    localStorage.setItem("tatica_users", JSON.stringify(updated));
+    alert("Aluno criado! Agora ele precisa ser autorizado.");
+    setNewStudent({ name: "", email: "" });
+    setShowStudentForm(false);
   }
 
   if (!isAuthorized) {
@@ -280,6 +302,37 @@ export default function Admin() {
       {/* TAB ALUNOS */}
       {activeTab === "users" && (
         <>
+          <div style={{ marginBottom: "2rem" }}>
+            <button onClick={() => setShowStudentForm(!showStudentForm)} style={{ background: "#ffd700", color: "#000", fontWeight: "bold", padding: "12px 24px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+              {showStudentForm ? "CANCELAR" : "+ CRIAR ALUNO"}
+            </button>
+          </div>
+
+          {showStudentForm && (
+            <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem", marginBottom: "2rem" }}>
+              <h3 style={{ color: "#ffd700", marginBottom: "1rem" }}>Novo Aluno</h3>
+              <div style={{ display: "grid", gap: "1rem" }}>
+                <input
+                  type="text"
+                  placeholder="Nome do aluno"
+                  value={newStudent.name}
+                  onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
+                  style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "12px", borderRadius: "4px" }}
+                />
+                <input
+                  type="email"
+                  placeholder="Email do aluno"
+                  value={newStudent.email}
+                  onChange={(e) => setNewStudent({ ...newStudent, email: e.target.value })}
+                  style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "12px", borderRadius: "4px" }}
+                />
+                <button onClick={createStudent} style={{ background: "#22c55e", color: "#fff", fontWeight: "bold", padding: "12px 24px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+                  CRIAR ALUNO
+                </button>
+              </div>
+            </div>
+          )}
+
           <h2 style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#ffd700", marginBottom: "1rem" }}>
             Alunos ({users.length})
           </h2>
