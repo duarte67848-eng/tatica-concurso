@@ -2,15 +2,33 @@
 
 import { useState } from "react";
 import { useRouter } from "next/router";
-import Link from "next/link";
 import { supabase } from "../lib/supabase";
 
-export default function Login() {
+interface LoginProps {
+  colors?: any;
+  isDark?: boolean;
+  toggleTheme?: () => void;
+}
+
+export default function Login({ colors }: LoginProps) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const c = colors || {
+    background: "#0d0d0d",
+    backgroundSecondary: "#1a1a1a",
+    backgroundTertiary: "#252525",
+    text: "#ffffff",
+    textSecondary: "#a0a0a0",
+    border: "#333333",
+    gold: "#ffd700",
+    goldHover: "#b8860b",
+    green: "#22c55e",
+    red: "#ef4444"
+  };
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -63,7 +81,6 @@ export default function Login() {
       return;
     }
 
-    // Verificar se já existe
     const { data: existing } = await supabase
       .from("usuario")
       .select("email")
@@ -76,7 +93,6 @@ export default function Login() {
       return;
     }
 
-    // Criar novo usuário pendente
     const newUser = {
       id: Date.now().toString(),
       nome: email.split("@")[0],
@@ -93,36 +109,43 @@ export default function Login() {
 
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "70vh" }}>
-      <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "2rem", width: "100%", maxWidth: "28rem" }}>
-        <h1 style={{ fontSize: "1.875rem", fontWeight: "bold", color: "#ffd700", textAlign: "center", marginBottom: "2rem" }}>
+      <div style={{ 
+        background: `linear-gradient(180deg, ${c.backgroundSecondary} 0%, ${c.background} 100%)`, 
+        border: `1px solid ${c.border}`, 
+        borderRadius: "8px", 
+        padding: "2rem", 
+        width: "100%", 
+        maxWidth: "28rem" 
+      }}>
+        <h1 style={{ fontSize: "1.875rem", fontWeight: "bold", color: c.gold, textAlign: "center", marginBottom: "2rem" }}>
           ACESSO MILITAR
         </h1>
         
         <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
           <div>
-            <label style={{ display: "block", color: "#9ca3af", marginBottom: "0.5rem", fontSize: "0.875rem" }}>EMAIL</label>
+            <label style={{ display: "block", color: c.textSecondary, marginBottom: "0.5rem", fontSize: "0.875rem" }}>EMAIL</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "12px", borderRadius: "4px", width: "100%" }}
+              style={{ background: c.background, border: `1px solid ${c.border}`, color: c.text, padding: "12px", borderRadius: "4px", width: "100%" }}
               placeholder="seu.email@exemplo.com"
             />
           </div>
           
           <div>
-            <label style={{ display: "block", color: "#9ca3af", marginBottom: "0.5rem", fontSize: "0.875rem" }}>SENHA</label>
+            <label style={{ display: "block", color: c.textSecondary, marginBottom: "0.5rem", fontSize: "0.875rem" }}>SENHA</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "12px", borderRadius: "4px", width: "100%" }}
+              style={{ background: c.background, border: `1px solid ${c.border}`, color: c.text, padding: "12px", borderRadius: "4px", width: "100%" }}
               placeholder="••••••••"
             />
           </div>
 
           {error && (
-            <div style={{ color: "#ef4444", fontSize: "0.875rem", textAlign: "center", padding: "0.5rem", border: "1px solid #ef4444", borderRadius: "4px" }}>
+            <div style={{ color: c.red, fontSize: "0.875rem", textAlign: "center", padding: "0.5rem", border: `1px solid ${c.red}`, borderRadius: "4px" }}>
               {error}
             </div>
           )}
@@ -130,7 +153,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            style={{ background: "linear-gradient(180deg, #ffd700 0%, #b8860b 100%)", color: "#000", fontWeight: "bold", padding: "12px 24px", borderRadius: "4px", border: "none", cursor: "pointer", textTransform: "uppercase", letterSpacing: "1px" }}
+            style={{ background: `linear-gradient(180deg, ${c.gold} 0%, ${c.goldHover} 100%)`, color: "#000", fontWeight: "bold", padding: "12px 24px", borderRadius: "4px", border: "none", cursor: "pointer", textTransform: "uppercase", letterSpacing: "1px" }}
           >
             {loading ? "AGUARDE..." : "ENTRAR"}
           </button>
@@ -140,7 +163,7 @@ export default function Login() {
           <button
             onClick={handleSignUp}
             disabled={loading}
-            style={{ background: "transparent", color: "#9ca3af", border: "none", cursor: "pointer", textDecoration: "underline" }}
+            style={{ background: "transparent", color: c.textSecondary, border: "none", cursor: "pointer", textDecoration: "underline" }}
           >
             Criar nova conta
           </button>
