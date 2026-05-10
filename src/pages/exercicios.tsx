@@ -43,6 +43,8 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
   const [answer, setAnswer] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState({ acertos: 0, erros: 0 });
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [isDifficult, setIsDifficult] = useState(false);
 
   const c = colors || {
     background: "#0d0d0d",
@@ -168,6 +170,48 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
 
   function finishExercise() {
     setMode("menu");
+  }
+
+  async function toggleFavorite() {
+    const q = exerciseQuestions[currentIndex];
+    if (!q || !user) return;
+    
+    if (isFavorite) {
+      await supabase.from("favoritos").delete().eq("usuario_email", user.email).eq("questao_id", parseInt(q.id));
+    } else {
+      await supabase.from("favoritos").insert([{ usuario_email: user.email, questao_id: parseInt(q.id) }]);
+    }
+    setIsFavorite(!isFavorite);
+  }
+
+  async function toggleDifficult() {
+    const q = exerciseQuestions[currentIndex];
+    if (!q || !user) return;
+    
+    if (isDifficult) {
+      await supabase.from("questoes_dificeis").delete().eq("usuario_email", user.email).eq("questao_id", parseInt(q.id));
+    } else {
+      await supabase.from("questoes_dificeis").insert([{ usuario_email: user.email, questao_id: parseInt(q.id) }]);
+    }
+    setIsDifficult(!isDifficult);
+  }
+
+  useEffect(() => {
+    if (exerciseQuestions[currentIndex] && user) {
+      checkFavoriteDifficult();
+    }
+  }, [currentIndex, exerciseQuestions, user]);
+
+  async function checkFavoriteDifficult() {
+    const q = exerciseQuestions[currentIndex];
+    if (!q || !user) return;
+    const qid = parseInt(q.id);
+    
+    const { data: fav } = await supabase.from("favoritos").select("id").eq("usuario_email", user.email).eq("questao_id", qid).single();
+    const { data: diff } = await supabase.from("questoes_dificeis").select("id").eq("usuario_email", user.email).eq("questao_id", qid).single();
+    
+    setIsFavorite(!!fav);
+    setIsDifficult(!!diff);
   }
 
   if (loading) {
@@ -349,9 +393,15 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
                 Questão {currentIndex + 1} de {exerciseQuestions.length}
               </span>
             </div>
-            <div style={{ display: "flex", gap: "1rem" }}>
+            <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
               <span style={{ color: c.green }}>✅ {score.acertos}</span>
               <span style={{ color: c.red }}>❌ {score.erros}</span>
+              <button onClick={toggleFavorite} title="Favoritar" style={{ background: isFavorite ? c.gold : c.backgroundTertiary, border: `1px solid ${c.border}`, borderRadius: "4px", padding: "4px 8px", cursor: "pointer", fontSize: "1rem" }}>
+                {isFavorite ? "⭐" : "☆"}
+              </button>
+              <button onClick={toggleDifficult} title="Marcar como difícil" style={{ background: isDifficult ? c.red : c.backgroundTertiary, border: `1px solid ${c.border}`, borderRadius: "4px", padding: "4px 8px", cursor: "pointer", fontSize: "1rem" }}>
+                {isDifficult ? "🎯" : "○"}
+              </button>
             </div>
           </div>
 
