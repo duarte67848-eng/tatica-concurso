@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import { supabase } from "../lib/supabase";
 
 interface Question {
   id: string;
@@ -22,14 +23,18 @@ export default function Simulado() {
   const [loading, setLoading] = useState(true);
   const [timeLeft, setTimeLeft] = useState(30 * 60);
   const [submitted, setSubmitted] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+  const [userName, setUserName] = useState("");
 
   useEffect(() => {
-    // Verificar login
-    const user = localStorage.getItem("tatica_current_user");
-    if (!user) {
+    const userStr = window.sessionStorage.getItem("tatica_user");
+    if (!userStr) {
       router.push("/login");
       return;
     }
+    const user = JSON.parse(userStr);
+    setUserEmail(user.email);
+    setUserName(user.name || user.email.split("@")[0]);
     loadQuestions();
   }, [router]);
 
@@ -42,10 +47,10 @@ export default function Simulado() {
     }
   }, [timeLeft, submitted]);
 
-  function loadQuestions() {
-    const savedQuestions = localStorage.getItem("tatica_questions");
-    if (savedQuestions && JSON.parse(savedQuestions).length > 0) {
-      setQuestions(JSON.parse(savedQuestions));
+  async function loadQuestions() {
+    const { data } = await supabase.from("questao").select("*");
+    if (data && data.length > 0) {
+      setQuestions(data as any);
     } else {
       setQuestions([
         { id: "1", pergunta: "Qual é o sinônimo de 'meticuloso'?", alternativa_a: "Cuidadoso", alternativa_b: "Negligente", alternativa_c: "Rápido", alternativa_d: "Desorganizado", alternativa_e: "Indiferente", resposta_correta: "A", disciplina: "CLPAP", peso: 1.0 },
@@ -67,7 +72,7 @@ export default function Simulado() {
     setAnswers({ ...answers, [questionId]: answer });
   };
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (submitted) return;
     setSubmitted(true);
 
@@ -92,20 +97,16 @@ export default function Simulado() {
 
     const pf = ((clpapScore * 1) + (cpfjmScore * 1.25) + (clipmScore * 1.75) + (cpScore * 2)) / 12;
 
-    // Salvar resultado no localStorage
-    const result = {
-      id: Date.now(),
+    // Salvar resultado no Supabase
+    await supabase.from("resultado").insert([{
+      email_usuario: userEmail,
+      nome_usuario: userName,
       acertos,
       erros,
-      pf: pf.toFixed(2),
-      questions: questions.length,
-      created_at: new Date().toISOString()
-    };
-
-    const savedResults = localStorage.getItem("tatica_results");
-    const results = savedResults ? JSON.parse(savedResults) : [];
-    results.unshift(result);
-    localStorage.setItem("tatica_results", JSON.stringify(results));
+      pf,
+      total_questoes: questions.length,
+      criado_em: new Date().toISOString()
+    }]);
 
     router.push("/resultado");
   }

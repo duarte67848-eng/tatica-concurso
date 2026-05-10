@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
 
 interface Question {
   id: string;
@@ -15,20 +16,21 @@ interface Question {
 
 interface User {
   id: string;
-  name: string;
+  nome: string;
   email: string;
-  approved: boolean;
-  created_at: string;
+  aprovado: boolean;
+  criado_em: string;
 }
 
 interface Result {
   id: number;
+  email_usuario: string;
+  nome_usuario: string;
   acertos: number;
   erros: number;
-  pf: string;
-  questions: number;
-  user_name?: string;
-  created_at: string;
+  pf: number;
+  total_questoes: number;
+  criado_em: string;
 }
 
 export default function Admin() {
@@ -50,28 +52,28 @@ export default function Admin() {
     disciplina: "CLPAP",
     peso: "1.0"
   });
-  const [newStudent, setNewStudent] = useState({ name: "", email: "" });
+  const [newStudent, setNewStudent] = useState({ nome: "", email: "" });
   const [showStudentForm, setShowStudentForm] = useState(false);
 
   useEffect(() => {
     loadData();
   }, []);
 
-  function loadData() {
-    const savedQuestions = localStorage.getItem("tatica_questions");
-    if (savedQuestions) setQuestions(JSON.parse(savedQuestions));
+  async function loadData() {
+    const { data: q } = await supabase.from("questao").select("*");
+    if (q) setQuestions(q as any);
 
-    const savedUsers = localStorage.getItem("tatica_users");
-    if (savedUsers) setUsers(JSON.parse(savedUsers));
+    const { data: u } = await supabase.from("usuario").select("*").order("criado_em", { ascending: false });
+    if (u) setUsers(u as any);
 
-    const savedResults = localStorage.getItem("tatica_results");
-    if (savedResults) setResults(JSON.parse(savedResults));
+    const { data: r } = await supabase.from("resultado").select("*").order("criado_em", { ascending: false });
+    if (r) setResults(r as any);
 
     setLoading(false);
   }
 
-  function addQuestion() {
-    const q: Question = {
+  async function addQuestion() {
+    const q = {
       id: Date.now().toString(),
       pergunta: newQuestion.pergunta,
       alternativa_a: newQuestion.alternativa_a,
@@ -84,10 +86,8 @@ export default function Admin() {
       peso: parseFloat(newQuestion.peso)
     };
 
-    const updated = [q, ...questions];
-    setQuestions(updated);
-    localStorage.setItem("tatica_questions", JSON.stringify(updated));
-
+    await supabase.from("questao").insert([q]);
+    setQuestions([q, ...questions]);
     alert("Questão adicionada!");
     setNewQuestion({
       pergunta: "",
@@ -102,54 +102,49 @@ export default function Admin() {
     });
   }
 
-  function deleteQuestion(id: string) {
+  async function deleteQuestion(id: string) {
     if (confirm("Excluir questão?")) {
-      const updated = questions.filter(q => q.id !== id);
-      setQuestions(updated);
-      localStorage.setItem("tatica_questions", JSON.stringify(updated));
+      await supabase.from("questao").delete().eq("id", id);
+      setQuestions(questions.filter(q => q.id !== id));
     }
   }
 
-  function approveUser(id: string) {
-    const updated = users.map(u => u.id === id ? { ...u, approved: true } : u);
-    setUsers(updated);
-    localStorage.setItem("tatica_users", JSON.stringify(updated));
+  async function approveUser(id: string) {
+    await supabase.from("usuario").update({ aprovado: true }).eq("id", id);
+    setUsers(users.map(u => u.id === id ? { ...u, aprovado: true } : u));
   }
 
-  function rejectUser(id: string) {
+  async function rejectUser(id: string) {
     if (confirm("Excluir usuário?")) {
-      const updated = users.filter(u => u.id !== id);
-      setUsers(updated);
-      localStorage.setItem("tatica_users", JSON.stringify(updated));
+      await supabase.from("usuario").delete().eq("id", id);
+      setUsers(users.filter(u => u.id !== id));
     }
   }
 
-  function deleteResult(id: number) {
-    if (confirm("Excluir resultado?")) {
-      const updated = results.filter(r => r.id !== id);
-      setResults(updated);
-      localStorage.setItem("tatica_results", JSON.stringify(updated));
-    }
-  }
-
-  function createStudent() {
-    if (!newStudent.name || !newStudent.email) {
+  async function createStudent() {
+    if (!newStudent.nome || !newStudent.email) {
       alert("Preencha nome e email!");
       return;
     }
-    const student: User = {
+    const student = {
       id: Date.now().toString(),
-      name: newStudent.name,
+      nome: newStudent.nome,
       email: newStudent.email,
-      approved: false,
-      created_at: new Date().toISOString()
+      aprovado: false,
+      criado_em: new Date().toISOString()
     };
-    const updated = [student, ...users];
-    setUsers(updated);
-    localStorage.setItem("tatica_users", JSON.stringify(updated));
+    await supabase.from("usuario").insert([student]);
+    setUsers([student, ...users]);
     alert("Aluno criado! Agora ele precisa ser autorizado.");
-    setNewStudent({ name: "", email: "" });
+    setNewStudent({ nome: "", email: "" });
     setShowStudentForm(false);
+  }
+
+  async function deleteResult(id: number) {
+    if (confirm("Excluir resultado?")) {
+      await supabase.from("resultado").delete().eq("id", id);
+      setResults(results.filter(r => r.id !== id));
+    }
   }
 
   if (!isAuthorized) {
@@ -179,6 +174,10 @@ export default function Admin() {
     );
   }
 
+  const approvedUsers = users.filter(u => u.aprovado).length;
+  const pendingUsers = users.filter(u => !u.aprovado).length;
+  const avgPF = results.length > 0 ? (results.reduce((acc, r) => acc + r.pf, 0) / results.length).toFixed(2) : "0.00";
+
   return (
     <div>
       <h1 style={{ fontSize: "1.875rem", fontWeight: "bold", color: "#ffd700", marginBottom: "2rem" }}>
@@ -193,11 +192,11 @@ export default function Admin() {
         </div>
         <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem", textAlign: "center" }}>
           <div style={{ color: "#9ca3af", fontSize: "0.875rem", marginBottom: "0.5rem" }}>ATIVOS</div>
-          <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#22c55e" }}>{users.filter(u => u.approved).length}</div>
+          <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#22c55e" }}>{approvedUsers}</div>
         </div>
         <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem", textAlign: "center" }}>
           <div style={{ color: "#9ca3af", fontSize: "0.875rem", marginBottom: "0.5rem" }}>PENDENTES</div>
-          <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#ef4444" }}>{users.filter(u => !u.approved).length}</div>
+          <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#ef4444" }}>{pendingUsers}</div>
         </div>
         <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem", textAlign: "center" }}>
           <div style={{ color: "#9ca3af", fontSize: "0.875rem", marginBottom: "0.5rem" }}>QUESTÕES</div>
@@ -209,9 +208,7 @@ export default function Admin() {
         </div>
         <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem", textAlign: "center" }}>
           <div style={{ color: "#9ca3af", fontSize: "0.875rem", marginBottom: "0.5rem" }}>MÉDIA PF</div>
-          <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#ffd700" }}>
-            {results.length > 0 ? (results.reduce((acc, r) => acc + parseFloat(r.pf), 0) / results.length).toFixed(2) : "0.00"}
-          </div>
+          <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#ffd700" }}>{avgPF}</div>
         </div>
       </div>
 
@@ -288,7 +285,7 @@ export default function Admin() {
                   <p style={{ marginBottom: "0.5rem" }}>{q.pergunta.substring(0, 80)}...</p>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span style={{ color: "#22c55e", fontWeight: "bold" }}>Resp: {q.resposta_correta}</span>
-                    <button onClick={() => deleteQuestion(q.id.toString())} style={{ background: "#ef4444", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+                    <button onClick={() => deleteQuestion(q.id)} style={{ background: "#ef4444", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
                       Excluir
                     </button>
                   </div>
@@ -315,8 +312,8 @@ export default function Admin() {
                 <input
                   type="text"
                   placeholder="Nome do aluno"
-                  value={newStudent.name}
-                  onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
+                  value={newStudent.nome}
+                  onChange={(e) => setNewStudent({ ...newStudent, nome: e.target.value })}
                   style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "12px", borderRadius: "4px" }}
                 />
                 <input
@@ -343,14 +340,14 @@ export default function Admin() {
               users.map((u) => (
                 <div key={u.id} style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                    <span style={{ color: "#fff", fontWeight: "bold" }}>{u.name}</span>
-                    <span style={{ color: u.approved ? "#22c55e" : "#ef4444", fontWeight: "bold" }}>
-                      {u.approved ? "ATIVO" : "PENDENTE"}
+                    <span style={{ color: "#fff", fontWeight: "bold" }}>{u.nome}</span>
+                    <span style={{ color: u.aprovado ? "#22c55e" : "#ef4444", fontWeight: "bold" }}>
+                      {u.aprovado ? "ATIVO" : "PENDENTE"}
                     </span>
                   </div>
                   <p style={{ marginBottom: "0.5rem", color: "#9ca3af" }}>{u.email}</p>
                   <div style={{ display: "flex", gap: "1rem" }}>
-                    {!u.approved && (
+                    {!u.aprovado && (
                       <button onClick={() => approveUser(u.id)} style={{ background: "#22c55e", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
                         AUTORIZAR
                       </button>
@@ -379,14 +376,14 @@ export default function Admin() {
               results.map((r) => (
                 <div key={r.id} style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                    <span style={{ color: "#fff", fontWeight: "bold" }}>{r.user_name || "Usuário"}</span>
-                    <span style={{ color: "#ffd700", fontWeight: "bold", fontSize: "1.25rem" }}>PF: {r.pf}</span>
+                    <span style={{ color: "#fff", fontWeight: "bold" }}>{r.nome_usuario || r.email_usuario}</span>
+                    <span style={{ color: "#ffd700", fontWeight: "bold", fontSize: "1.25rem" }}>PF: {r.pf.toFixed(2)}</span>
                   </div>
                   <p style={{ marginBottom: "0.5rem", color: "#9ca3af" }}>
-                    Acertos: {r.acertos} | Erros: {r.erros} | Questões: {r.questions}
+                    Acertos: {r.acertos} | Erros: {r.erros} | Questões: {r.total_questoes}
                   </p>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ color: "#6b7280" }}>{new Date(r.created_at).toLocaleString()}</span>
+                    <span style={{ color: "#6b7280" }}>{new Date(r.criado_em).toLocaleString()}</span>
                     <button onClick={() => deleteResult(r.id)} style={{ background: "#ef4444", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
                       EXCLUIR
                     </button>

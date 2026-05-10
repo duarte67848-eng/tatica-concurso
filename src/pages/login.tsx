@@ -3,53 +3,92 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import { supabase } from "../lib/supabase";
 
 export default function Login() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  function handleLogin(e: React.FormEvent) {
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    
+    setLoading(true);
+    setError("");
+
     if (!email || !password) {
       setError("Preencha email e senha");
+      setLoading(false);
       return;
     }
 
-    // Qualquer usuário pode logar se tiver conta
-    const user = { email, name: email.split("@")[0] };
-    window.sessionStorage.setItem("tatica_user", JSON.stringify(user));
+    const { data: users } = await supabase
+      .from("usuario")
+      .select("*")
+      .eq("email", email)
+      .limit(1);
+
+    if (!users || users.length === 0) {
+      setError("Usuário não cadastrado. Crie uma conta primeiro.");
+      setLoading(false);
+      return;
+    }
+
+    const user = users[0];
+    if (!user.aprovado) {
+      setError("Aguarde aprovação do administrador!");
+      setLoading(false);
+      return;
+    }
+
+    window.sessionStorage.setItem("tatica_user", JSON.stringify({ email: user.email, name: user.nome }));
     router.push("/dashboard");
+    setLoading(false);
   }
 
-  function handleSignUp() {
+  async function handleSignUp() {
+    setLoading(true);
+    setError("");
+
     if (!email || !password) {
       setError("Preencha email e senha");
+      setLoading(false);
       return;
     }
 
     if (password.length < 4) {
       setError("Senha deve ter pelo menos 4 caracteres");
+      setLoading(false);
       return;
     }
 
-    // Criar novo usuário - aprovação automática por enquanto
+    // Verificar se já existe
+    const { data: existing } = await supabase
+      .from("usuario")
+      .select("email")
+      .eq("email", email)
+      .limit(1);
+
+    if (existing && existing.length > 0) {
+      setError("Usuário já cadastrado! Aguarde aprovação.");
+      setLoading(false);
+      return;
+    }
+
+    // Criar novo usuário pendente
     const newUser = {
       id: Date.now().toString(),
-      name: email.split("@")[0],
+      nome: email.split("@")[0],
       email: email,
-      approved: true, // Auto approved por enquanto
-      created_at: new Date().toISOString()
+      aprovado: false,
+      criado_em: new Date().toISOString()
     };
+
+    await supabase.from("usuario").insert([newUser]);
     
-    // Salvar localmente (simulação - não funciona entre navegadores)
-    // Nota: Para funcionar entre usuários, precisa de banco de dados
-    localStorage.setItem("tatica_last_user", JSON.stringify(newUser));
-    
-    alert("Conta criada com sucesso! Você já pode fazer login.");
-    setError("");
+    alert("Cadastro realizado! Aguarde aprovação do administrador.");
+    setLoading(false);
   }
 
   return (
@@ -90,18 +129,20 @@ export default function Login() {
 
           <button
             type="submit"
+            disabled={loading}
             style={{ background: "linear-gradient(180deg, #ffd700 0%, #b8860b 100%)", color: "#000", fontWeight: "bold", padding: "12px 24px", borderRadius: "4px", border: "none", cursor: "pointer", textTransform: "uppercase", letterSpacing: "1px" }}
           >
-            ENTRAR
+            {loading ? "AGUARDE..." : "ENTRAR"}
           </button>
         </form>
 
         <div style={{ marginTop: "1.5rem", textAlign: "center" }}>
           <button
             onClick={handleSignUp}
-            style={{ background: "none", border: "none", color: "#ffd700", cursor: "pointer", fontSize: "0.875rem" }}
+            disabled={loading}
+            style={{ background: "transparent", color: "#9ca3af", border: "none", cursor: "pointer", textDecoration: "underline" }}
           >
-            CRIAR NOVA CONTA
+            Criar nova conta
           </button>
         </div>
       </div>
