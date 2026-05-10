@@ -410,27 +410,63 @@ export default function Admin() {
                   </div>
 
                   {expandedResult === r.id && r.detalhes && (
-                    <div style={{ marginTop: "1rem", padding: "1rem", background: "#0d0d0d", borderRadius: "4px", maxHeight: "400px", overflowY: "auto" }}>
-                      <h3 style={{ color: "#ffd700", marginBottom: "0.5rem" }}>Detalhamento por Questão</h3>
+                    <div style={{ marginTop: "1rem", padding: "1rem", background: "#0d0d0d", borderRadius: "4px" }}>
                       {(() => {
                         try {
                           const detalhes: DetalheQuestao[] = JSON.parse(r.detalhes);
-                          return detalhes.map((d, idx) => (
-                            <div key={idx} style={{ padding: "8px", borderBottom: "1px solid #333", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                              <div>
-                                <span style={{ color: "#9ca3af", fontSize: "0.75rem" }}>{d.disciplina}</span>
-                                <span style={{ marginLeft: "8px", color: "#fff" }}>Q{idx + 1}</span>
+                          const clpap = detalhes.filter(d => d.disciplina === "CLPAP");
+                          const cpjm = detalhes.filter(d => d.disciplina === "CPJM");
+                          const clipm = detalhes.filter(d => d.disciplina === "CLIPM");
+                          const cp = detalhes.filter(d => d.disciplina === "CP");
+
+                          const getStats = (arr: DetalheQuestao[]) => {
+                            const acertos = arr.filter(d => d.acertou).length;
+                            return `${acertos}/${arr.length}`;
+                          };
+
+                          return (
+                            <>
+                              <h3 style={{ color: "#ffd700", marginBottom: "0.75rem" }}>Acertos por Disciplina</h3>
+                              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.5rem", marginBottom: "1rem" }}>
+                                <div style={{ background: "#1a1a1a", padding: "0.75rem", borderRadius: "4px", textAlign: "center" }}>
+                                  <div style={{ color: "#9ca3af", fontSize: "0.75rem" }}>CLPAP</div>
+                                  <div style={{ color: "#22c55e", fontSize: "1.25rem", fontWeight: "bold" }}>{getStats(clpap)}</div>
+                                </div>
+                                <div style={{ background: "#1a1a1a", padding: "0.75rem", borderRadius: "4px", textAlign: "center" }}>
+                                  <div style={{ color: "#9ca3af", fontSize: "0.75rem" }}>CPJM</div>
+                                  <div style={{ color: "#22c55e", fontSize: "1.25rem", fontWeight: "bold" }}>{getStats(cpjm)}</div>
+                                </div>
+                                <div style={{ background: "#1a1a1a", padding: "0.75rem", borderRadius: "4px", textAlign: "center" }}>
+                                  <div style={{ color: "#9ca3af", fontSize: "0.75rem" }}>CLIPM</div>
+                                  <div style={{ color: "#22c55e", fontSize: "1.25rem", fontWeight: "bold" }}>{getStats(clipm)}</div>
+                                </div>
+                                <div style={{ background: "#1a1a1a", padding: "0.75rem", borderRadius: "4px", textAlign: "center" }}>
+                                  <div style={{ color: "#9ca3af", fontSize: "0.75rem" }}>CP</div>
+                                  <div style={{ color: "#22c55e", fontSize: "1.25rem", fontWeight: "bold" }}>{getStats(cp)}</div>
+                                </div>
                               </div>
-                              <div>
-                                <span style={{ color: "#fff", marginRight: "8px" }}>
-                                  Sua: <strong style={{ color: d.acertou ? "#22c55e" : "#ef4444" }}>{d.resposta_usuario}</strong>
-                                </span>
-                                <span style={{ color: "#9ca3af" }}>
-                                  Certa: <strong style={{ color: "#22c55e" }}>{d.resposta_correta}</strong>
-                                </span>
+
+                              <h3 style={{ color: "#ffd700", marginBottom: "0.5rem" }}>Detalhamento por Questão</h3>
+                              <div style={{ maxHeight: "300px", overflowY: "auto" }}>
+                                {detalhes.map((d, idx) => (
+                                  <div key={idx} style={{ padding: "8px", borderBottom: "1px solid #333", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <div>
+                                      <span style={{ color: "#9ca3af", fontSize: "0.75rem" }}>{d.disciplina}</span>
+                                      <span style={{ marginLeft: "8px", color: "#fff" }}>Q{idx + 1}</span>
+                                    </div>
+                                    <div>
+                                      <span style={{ color: "#fff", marginRight: "8px" }}>
+                                        Sua: <strong style={{ color: d.acertou ? "#22c55e" : "#ef4444" }}>{d.resposta_usuario}</strong>
+                                      </span>
+                                      <span style={{ color: "#9ca3af" }}>
+                                        Certa: <strong style={{ color: "#22c55e" }}>{d.resposta_correta}</strong>
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
-                            </div>
-                          ));
+                            </>
+                          );
                         } catch {
                           return <div style={{ color: "#ef4444" }}>Erro ao carregar detalhes</div>;
                         }
