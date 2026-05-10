@@ -409,9 +409,14 @@ export default function Admin() {
                     </button>
                   </div>
 
-                  {expandedResult === r.id && r.detalhes && (
+                  {expandedResult === r.id && (
                     <div style={{ marginTop: "1rem", padding: "1rem", background: "#0d0d0d", borderRadius: "4px" }}>
-                      {(() => {
+                      {!r.detalhes ? (
+                        <div style={{ color: "#9ca3af", textAlign: "center", padding: "2rem" }}>
+                          Este resultado não possui detalhes salvos.<br/>
+                          Faça um novo simulado para ver os detalhes.
+                        </div>
+                      ) : (() => {
                         try {
                           const detalhes: DetalheQuestao[] = JSON.parse(r.detalhes);
                           const clpap = detalhes.filter(d => d.disciplina === "CLPAP");
