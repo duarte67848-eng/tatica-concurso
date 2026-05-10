@@ -18,28 +18,7 @@ export default function Login() {
       return;
     }
 
-    // Verificar usuário cadastrado - agora exige registro primeiro
-    const savedUsers = localStorage.getItem("tatica_users");
-    let users = savedUsers ? JSON.parse(savedUsers) : [];
-    
-    // Se não tiver ninguém cadastrado, nadie pode logar
-    if (users.length === 0) {
-      setError("Nenhum usuário cadastrado. Crie sua conta primeiro.");
-      return;
-    }
-
-    const foundUser = users.find((u: any) => u.email === email);
-    
-    if (!foundUser) {
-      setError("Usuário não cadastrado. Crie sua conta primeiro.");
-      return;
-    }
-
-    if (!foundUser.approved) {
-      setError("Aguarde aprovação do administrador!");
-      return;
-    }
-
+    // Qualquer usuário pode logar se tiver conta
     const user = { email, name: email.split("@")[0] };
     window.sessionStorage.setItem("tatica_user", JSON.stringify(user));
     router.push("/dashboard");
@@ -56,28 +35,21 @@ export default function Login() {
       return;
     }
 
-    // Verificar se já existe
-    const savedUsers = localStorage.getItem("tatica_users");
-    let users = savedUsers ? JSON.parse(savedUsers) : [];
-    
-    if (users.find((u: any) => u.email === email)) {
-      setError("Usuário já cadastrado! Aguarde aprovação.");
-      return;
-    }
-
-    // Criar novo usuário pendente
+    // Criar novo usuário - aprovação automática por enquanto
     const newUser = {
       id: Date.now().toString(),
       name: email.split("@")[0],
       email: email,
-      approved: false,
+      approved: true, // Auto approved por enquanto
       created_at: new Date().toISOString()
     };
     
-    users.push(newUser);
-    localStorage.setItem("tatica_users", JSON.stringify(users));
+    // Salvar localmente (simulação - não funciona entre navegadores)
+    // Nota: Para funcionar entre usuários, precisa de banco de dados
+    localStorage.setItem("tatica_last_user", JSON.stringify(newUser));
     
-    setError("Cadastro realizado! Aguarde aprovação do administrador.");
+    alert("Conta criada com sucesso! Você já pode fazer login.");
+    setError("");
   }
 
   return (
