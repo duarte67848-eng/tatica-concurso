@@ -64,6 +64,11 @@ export default function Admin() {
   const [newStudent, setNewStudent] = useState({ nome: "", email: "" });
   const [showStudentForm, setShowStudentForm] = useState(false);
   const [expandedResult, setExpandedResult] = useState<number | null>(null);
+  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importText, setImportText] = useState("");
+  const [importStatus, setImportStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [importResult, setImportResult] = useState({ success: 0, errors: 0 });
 
   useEffect(() => {
     loadData();
@@ -117,6 +122,98 @@ export default function Admin() {
       await supabase.from("questao").delete().eq("id", id);
       setQuestions(questions.filter(q => q.id !== id));
     }
+  }
+
+  async function updateQuestion() {
+    if (!editingQuestion) return;
+    
+    const { error } = await supabase
+      .from("questao")
+      .update({
+        pergunta: editingQuestion.pergunta,
+        alternativa_a: editingQuestion.alternativa_a,
+        alternativa_b: editingQuestion.alternativa_b,
+        alternativa_c: editingQuestion.alternativa_c,
+        alternativa_d: editingQuestion.alternativa_d,
+        alternativa_e: editingQuestion.alternativa_e,
+        resposta_correta: editingQuestion.resposta_correta,
+        disciplina: editingQuestion.disciplina,
+        peso: editingQuestion.peso
+      })
+      .eq("id", editingQuestion.id);
+
+    if (error) {
+      alert("Erro ao atualizar: " + error.message);
+    } else {
+      setQuestions(questions.map(q => q.id === editingQuestion.id ? editingQuestion : q));
+      setEditingQuestion(null);
+      alert("Questão atualizada com sucesso!");
+    }
+  }
+
+  async function importQuestions() {
+    if (!importText.trim()) {
+      alert("Cole as questões no campo de texto!");
+      return;
+    }
+
+    setImportStatus("loading");
+    let success = 0;
+    let errors = 0;
+
+    try {
+      // Parse each line - format: pergunta|A|B|C|D|E|resposta|disciplina|peso
+      const lines = importText.split("\n").filter(line => line.trim());
+      
+      for (const line of lines) {
+        const parts = line.split("|");
+        if (parts.length >= 8) {
+          const newQ = {
+            id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+            pergunta: parts[0].trim(),
+            alternativa_a: parts[1].trim(),
+            alternativa_b: parts[2].trim(),
+            alternativa_c: parts[3].trim(),
+            alternativa_d: parts[4].trim(),
+            alternativa_e: parts[5].trim(),
+            resposta_correta: parts[6].trim().toUpperCase(),
+            disciplina: parts[7].trim().toUpperCase(),
+            peso: parseFloat(parts[8]?.trim() || "1.0")
+          };
+          
+          const { error } = await supabase.from("questao").insert([newQ]);
+          if (error) {
+            errors++;
+          } else {
+            success++;
+            setQuestions([...questions, newQ]);
+          }
+        } else {
+          errors++;
+        }
+      }
+
+      setImportResult({ success, errors });
+      setImportStatus("success");
+      setImportText("");
+    } catch (e) {
+      setImportStatus("error");
+      alert("Erro ao importar questões");
+    }
+  }
+
+  function exportQuestions() {
+    const csv = questions.map(q => 
+      `${q.pergunta}|${q.alternativa_a}|${q.alternativa_b}|${q.alternativa_c}|${q.alternativa_d}|${q.alternativa_e}|${q.resposta_correta}|${q.disciplina}|${q.peso}`
+    ).join("\n");
+    
+    const blob = new Blob([csv], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "questoes_export.txt";
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   async function approveUser(id: string) {
@@ -280,6 +377,12 @@ export default function Admin() {
                 <button onClick={addQuestion} style={{ background: "#ffd700", color: "#000", fontWeight: "bold", padding: "12px 24px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
                   Adicionar
                 </button>
+                <button onClick={() => setShowImportModal(true)} style={{ background: "#3b82f6", color: "#fff", fontWeight: "bold", padding: "12px 24px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+                  📥 Importar
+                </button>
+                <button onClick={exportQuestions} style={{ background: "#10b981", color: "#fff", fontWeight: "bold", padding: "12px 24px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+                  📤 Exportar
+                </button>
               </div>
             </div>
           </div>
@@ -300,9 +403,14 @@ export default function Admin() {
                   <p style={{ marginBottom: "0.5rem" }}>{q.pergunta.substring(0, 80)}...</p>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span style={{ color: "#22c55e", fontWeight: "bold" }}>Resp: {q.resposta_correta}</span>
-                    <button onClick={() => deleteQuestion(q.id)} style={{ background: "#ef4444", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
-                      Excluir
-                    </button>
+                    <div style={{ display: "flex", gap: "0.5rem" }}>
+                      <button onClick={() => setEditingQuestion(q)} style={{ background: "#3b82f6", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+                        Editar
+                      </button>
+                      <button onClick={() => deleteQuestion(q.id)} style={{ background: "#ef4444", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+                        Excluir
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))
@@ -483,6 +591,90 @@ export default function Admin() {
             )}
           </div>
         </>
+      )}
+
+      {/* Modal de Editar Questão */}
+      {editingQuestion && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
+          <div style={{ background: "#1a1a1a", border: "1px solid #333", borderRadius: "8px", padding: "2rem", maxWidth: "600px", width: "90%", maxHeight: "90vh", overflow: "auto" }}>
+            <h2 style={{ color: "#ffd700", marginBottom: "1rem" }}>Editar Questão</h2>
+            <div style={{ display: "grid", gap: "1rem" }}>
+              <textarea
+                value={editingQuestion.pergunta}
+                onChange={(e) => setEditingQuestion({ ...editingQuestion, pergunta: e.target.value })}
+                style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "12px", borderRadius: "4px", minHeight: "100px" }}
+                placeholder="Pergunta"
+              />
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "0.5rem" }}>
+                <input type="text" placeholder="A" value={editingQuestion.alternativa_a} onChange={(e) => setEditingQuestion({ ...editingQuestion, alternativa_a: e.target.value })} style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "8px", borderRadius: "4px" }} />
+                <input type="text" placeholder="B" value={editingQuestion.alternativa_b} onChange={(e) => setEditingQuestion({ ...editingQuestion, alternativa_b: e.target.value })} style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "8px", borderRadius: "4px" }} />
+                <input type="text" placeholder="C" value={editingQuestion.alternativa_c} onChange={(e) => setEditingQuestion({ ...editingQuestion, alternativa_c: e.target.value })} style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "8px", borderRadius: "4px" }} />
+                <input type="text" placeholder="D" value={editingQuestion.alternativa_d} onChange={(e) => setEditingQuestion({ ...editingQuestion, alternativa_d: e.target.value })} style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "8px", borderRadius: "4px" }} />
+                <input type="text" placeholder="E" value={editingQuestion.alternativa_e} onChange={(e) => setEditingQuestion({ ...editingQuestion, alternativa_e: e.target.value })} style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "8px", borderRadius: "4px" }} />
+              </div>
+              <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                <select value={editingQuestion.resposta_correta} onChange={(e) => setEditingQuestion({ ...editingQuestion, resposta_correta: e.target.value })} style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "12px", borderRadius: "4px" }}>
+                  <option value="A">A</option>
+                  <option value="B">B</option>
+                  <option value="C">C</option>
+                  <option value="D">D</option>
+                  <option value="E">E</option>
+                </select>
+                <select value={editingQuestion.disciplina} onChange={(e) => setEditingQuestion({ ...editingQuestion, disciplina: e.target.value })} style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "12px", borderRadius: "4px" }}>
+                  <option value="CLPAP">CLPAP</option>
+                  <option value="CPJM">CPJM</option>
+                  <option value="CLIPM">CLIPM</option>
+                  <option value="CP">CP</option>
+                </select>
+                <input type="number" step="0.25" value={editingQuestion.peso} onChange={(e) => setEditingQuestion({ ...editingQuestion, peso: parseFloat(e.target.value) })} style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "12px", borderRadius: "4px", width: "80px" }} />
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+              <button onClick={updateQuestion} style={{ background: "#22c55e", color: "#fff", fontWeight: "bold", padding: "12px 24px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+                Salvar Alterações
+              </button>
+              <button onClick={() => setEditingQuestion(null)} style={{ background: "#6b7280", color: "#fff", padding: "12px 24px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Importação */}
+      {showImportModal && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
+          <div style={{ background: "#1a1a1a", border: "1px solid #333", borderRadius: "8px", padding: "2rem", maxWidth: "600px", width: "90%" }}>
+            <h2 style={{ color: "#ffd700", marginBottom: "1rem" }}>Importar Questões</h2>
+            <p style={{ color: "#9ca3af", marginBottom: "1rem", fontSize: "0.875rem" }}>
+              Formato: pergunta|alternativa_a|alternativa_b|alternativa_c|alternativa_d|alternativa_e|resposta_correta|disciplina|peso
+            </p>
+            <textarea
+              value={importText}
+              onChange={(e) => setImportText(e.target.value)}
+              style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "12px", borderRadius: "4px", minHeight: "200px", width: "100%" }}
+              placeholder="Cole as questões aqui, uma por linha..."
+            />
+            {importStatus === "success" && (
+              <div style={{ color: "#22c55e", marginTop: "1rem" }}>
+                ✅ Importadas: {importResult.success} | Erros: {importResult.errors}
+              </div>
+            )}
+            {importStatus === "error" && (
+              <div style={{ color: "#ef4444", marginTop: "1rem" }}>
+                ❌ Erro ao importar
+              </div>
+            )}
+            <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+              <button onClick={importQuestions} disabled={importStatus === "loading"} style={{ background: "#3b82f6", color: "#fff", fontWeight: "bold", padding: "12px 24px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+                {importStatus === "loading" ? "Importando..." : "Importar"}
+              </button>
+              <button onClick={() => { setShowImportModal(false); setImportStatus("idle"); setImportText(""); }} style={{ background: "#6b7280", color: "#fff", padding: "12px 24px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
