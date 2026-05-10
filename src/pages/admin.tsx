@@ -110,8 +110,13 @@ export default function Admin() {
   }
 
   async function approveUser(id: string) {
-    await supabase.from("usuario").update({ aprovado: true }).eq("id", id);
-    setUsers(users.map(u => u.id === id ? { ...u, aprovado: true } : u));
+    const { error } = await supabase.from("usuario").update({ aprovado: true }).eq("id", id);
+    if (error) {
+      alert("Erro ao autorizar: " + error.message);
+    } else {
+      setUsers(users.map(u => u.id === id ? { ...u, aprovado: true } : u));
+      alert("Aluno autorizado com sucesso!");
+    }
   }
 
   async function rejectUser(id: string) {
