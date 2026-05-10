@@ -21,7 +21,7 @@ export default function App({ Component, pageProps }: AppProps) {
       </main>
       <footer style={{ background: "#1a1a1a", borderTop: "1px solid #b8860b", padding: "1rem", textAlign: "center" }}>
         <p style={{ color: "#b8860b", fontSize: "0.875rem" }}>
-          © 2024 TÁTICA CONCURSO - Sistema de Simulados Militares
+          © 2026 TÁTICA CONCURSO - Sistema de Simulados Militares
         </p>
       </footer>
     </div>
