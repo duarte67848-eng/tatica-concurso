@@ -84,6 +84,45 @@ export default function Simulado({ colors }: { colors?: any }) {
     setAnswers({ ...answers, [questionId]: answer });
   };
 
+  async function saveErrorsToReview() {
+    const errorsToSave = questions
+      .filter(q => answers[q.id] && answers[q.id] !== q.resposta_correta)
+      .map(q => ({
+        usuario_email: userEmail,
+        questao_id: q.id,
+        disciplina: q.disciplina,
+        bloco: q.disciplina,
+        resposta_usuario: answers[q.id] || "NÃO RESPONDIDA",
+        resposta_correta: q.resposta_correta,
+        errou_em: new Date().toISOString(),
+        vezes_errada: 1,
+        dificuldade: "médio"
+      }));
+
+    if (errorsToSave.length > 0) {
+      const { data: existing } = await supabase
+        .from("revisao")
+        .select("id, questao_id, vezes_errada")
+        .eq("usuario_email", userEmail)
+        .in("questao_id", errorsToSave.map(e => e.questao_id));
+
+      if (existing && existing.length > 0) {
+        for (const err of existing) {
+          await supabase
+            .from("revisao")
+            .update({ vezes_errada: err.vezes_errada + 1, errou_em: new Date().toISOString() })
+            .eq("id", err.id);
+        }
+        const newErrors = errorsToSave.filter(e => !existing.some((ex: any) => ex.questao_id === e.questao_id));
+        if (newErrors.length > 0) {
+          await supabase.from("revisao").insert(newErrors);
+        }
+      } else {
+        await supabase.from("revisao").insert(errorsToSave);
+      }
+    }
+  }
+
   async function handleSubmit() {
     if (submitted) return;
     setSubmitted(true);
@@ -128,6 +167,9 @@ export default function Simulado({ colors }: { colors?: any }) {
       detalhes: JSON.stringify(detalhes),
       criado_em: new Date().toISOString()
     }]);
+
+    // Salvar erros para revisão inteligente
+    await saveErrorsToReview();
 
     router.push("/resultado");
   }
