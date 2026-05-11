@@ -213,6 +213,7 @@ export default function App({ Component, pageProps }: AppProps) {
               <a href="/simulado" style={{ color: colors.gold, textDecoration: "none" }}>Simulado</a>
               <a href="/exercicios" style={{ color: colors.gold, textDecoration: "none" }}>Exercícios</a>
               <a href="/revisao" style={{ color: colors.gold, textDecoration: "none" }}>Revisão</a>
+              <a href="/biblioteca" style={{ color: colors.gold, textDecoration: "none" }}>📚 Biblioteca</a>
               <a href="/favoritos" style={{ color: colors.gold, textDecoration: "none" }}>⭐</a>
               <a href="/dificeis" style={{ color: colors.gold, textDecoration: "none" }}>🎯</a>
               <a href="/perfil" style={{ color: colors.gold, textDecoration: "none" }}>Perfil</a>
