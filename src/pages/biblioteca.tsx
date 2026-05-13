@@ -127,7 +127,8 @@ export default function Biblioteca({ colors }: { colors?: any }) {
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
-        if (user.email && user.email.includes("admin")) {
+        // Admin fixo - ajustar depois conforme necessidade
+        if (user.email === "duarte67848@gmail.com" || user.email === "admin@tatica.com") {
           setIsAdmin(true);
         }
       } catch {}
@@ -203,7 +204,7 @@ export default function Biblioteca({ colors }: { colors?: any }) {
         )}
       </div>
 
-      {showGeradorIA && <GeradorIA colors={c} />}
+      {isAdmin && showGeradorIA && <GeradorIA colors={c} />}
 
       {isAdmin && (
       {/* Filtros */}
