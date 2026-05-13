@@ -184,9 +184,12 @@ export default function Biblioteca({ colors }: { colors?: any }) {
 
   return (
     <div style={{ padding: "1rem" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
+      <div style={{ marginBottom: "1.5rem" }}>
         <h1 style={{ color: c.gold, margin: 0, fontSize: "1.5rem" }}>📚 Biblioteca de Estudos</h1>
-        {isAdmin && (
+      </div>
+
+      {isAdmin && (
+      <div style={{ marginBottom: "1.5rem", padding: "1rem", background: c.backgroundTertiary, borderRadius: "8px" }}>
         <button
           onClick={() => setShowGeradorIA(!showGeradorIA)}
           style={{
@@ -201,57 +204,7 @@ export default function Biblioteca({ colors }: { colors?: any }) {
         >
           {showGeradorIA ? "✕ Fechar" : "📝 Adicionar Questões"}
         </button>
-        )}
-      </div>
-
-      {isAdmin && showGeradorIA && <GeradorIA colors={c} />}
-
-      {isAdmin && (
-      {/* Filtros */}
-      <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
-        <input
-          type="text"
-          placeholder="Buscar documentos..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{
-            padding: "0.75rem 1rem",
-            background: c.background,
-            border: `1px solid ${c.border}`,
-            borderRadius: "4px",
-            color: c.text,
-            flex: 1,
-            minWidth: "200px",
-          }}
-        />
-        <select
-          value={filterDisciplina}
-          onChange={(e) => setFilterDisciplina(e.target.value)}
-          style={{
-            padding: "0.75rem 1rem",
-            background: c.background,
-            border: `1px solid ${c.border}`,
-            borderRadius: "4px",
-            color: c.text,
-          }}
-        >
-          <option value="todas">Todas Disciplinas</option>
-          {disciplinas.map(d => <option key={d} value={d}>{d}</option>)}
-        </select>
-        <select
-          value={filterCategoria}
-          onChange={(e) => setFilterCategoria(e.target.value)}
-          style={{
-            padding: "0.75rem 1rem",
-            background: c.background,
-            border: `1px solid ${c.border}`,
-            borderRadius: "4px",
-            color: c.text,
-          }}
-        >
-          <option value="todas">Todas Categorias</option>
-          {categorias.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-        </select>
+        {showGeradorIA && <GeradorIA colors={c} />}
       </div>
       )}
 
