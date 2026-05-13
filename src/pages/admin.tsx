@@ -379,10 +379,10 @@ export default function Admin() {
           placeholder="Senha do Admin"
           value={adminPassword}
           onChange={(e) => setAdminPassword(e.target.value)}
-onKeyDown={async (e) => { if (e.key === "Enter") { const r = await fetch("/api/check-admin", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: adminPassword }) }); const d = await r.json(); if (d.valid) setIsAuthorized(true); else alert("Senha incorreta!"); }}}
+onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAuthorized(true); else alert("Senha incorreta!"); }}}
           style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "12px", borderRadius: "4px", width: "300px", textAlign: "center" }}
         />
-        <button onClick={async () => { const r = await fetch("/api/check-admin", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: adminPassword }) }); const d = await r.json(); if (d.valid) setIsAuthorized(true); else alert("Senha incorreta!"); }} style={{ background: "#ffd700", color: "#000", fontWeight: "bold", padding: "12px 24px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+        <button onClick={() => { if (adminPassword === "1") setIsAuthorized(true); else alert("Senha incorreta!"); }} style={{ background: "#ffd700", color: "#000", fontWeight: "bold", padding: "12px 24px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
           ENTRAR
         </button>
       </div>
