@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "../lib/supabase";
-import GeradorIA from "../components/GeradorIA";
 
 interface Pdf {
   id: number;
@@ -180,33 +179,11 @@ export default function Biblioteca({ colors }: { colors?: any }) {
     return () => { if (style) style.remove(); };
   }, [viewerPdf]);
 
-  const [showGeradorIA, setShowGeradorIA] = useState(false);
-
   return (
     <div style={{ padding: "1rem" }}>
       <div style={{ marginBottom: "1.5rem" }}>
         <h1 style={{ color: c.gold, margin: 0, fontSize: "1.5rem" }}>📚 Biblioteca de Estudos</h1>
       </div>
-
-      {isAdmin && (
-      <div style={{ marginBottom: "1.5rem", padding: "1rem", background: c.backgroundTertiary, borderRadius: "8px" }}>
-        <button
-          onClick={() => setShowGeradorIA(!showGeradorIA)}
-          style={{
-            padding: "0.5rem 1rem",
-            background: c.backgroundTertiary,
-            border: `1px solid ${c.border}`,
-            borderRadius: "4px",
-            color: c.text,
-            cursor: "pointer",
-            fontWeight: "bold",
-          }}
-        >
-          {showGeradorIA ? "✕ Fechar" : "📝 Adicionar Questões"}
-        </button>
-        {showGeradorIA && <GeradorIA colors={c} />}
-      </div>
-      )}
 
       {loading ? (
         <div style={{ color: c.textSecondary }}>Carregando...</div>
