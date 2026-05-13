@@ -1,48 +1,39 @@
 "use client";
-// Favoritos page
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { supabase } from "../lib/supabase";
 
 interface Questao {
-  id: number;
-  texto: string;
-  alternativas: string[];
-  resposta_correta: number;
-  materia: string;
-  assunto?: string;
-  dificuldade?: string;
+  id: string;
+  pergunta: string;
+  alternativa_a: string;
+  alternativa_b: string;
+  alternativa_c: string;
+  alternativa_d: string;
+  alternativa_e: string;
+  resposta_correta: string;
+  disciplina: string;
+  peso: number;
 }
 
 export default function Favoritos({ colors }: { colors?: any }) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [favoritos, setFavoritos] = useState<any[]>([]);
   const [questoes, setQuestoes] = useState<Questao[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [mode, setMode] = useState<"lista" | "estudo">("lista");
 
   const c = colors || {
-    background: "#0d0d0d",
-    backgroundSecondary: "#1a1a1a",
-    backgroundTertiary: "#252525",
-    text: "#ffffff",
-    textSecondary: "#a0a0a0",
-    border: "#333333",
-    gold: "#ffd700",
-    red: "#ef4444",
-    green: "#22c55e",
-    blue: "#3b82f6"
+    background: "#0d0d0d", backgroundSecondary: "#1a1a1a", backgroundTertiary: "#252525",
+    text: "#ffffff", textSecondary: "#a0a0a0", border: "#333333", gold: "#ffd700",
+    red: "#ef4444", green: "#22c55e", blue: "#3b82f6"
   };
 
   useEffect(() => {
     const userData = window.sessionStorage.getItem("tatica_user");
-    if (!userData) {
-      router.push("/login");
-      return;
-    }
+    if (!userData) { router.push("/login"); return; }
     const userObj = JSON.parse(userData);
     loadFavoritos(userObj.email);
   }, [router]);
@@ -58,48 +49,33 @@ export default function Favoritos({ colors }: { colors?: any }) {
       const ids = favs.map(f => f.questao_id);
       const { data: qs } = await supabase
         .from("questao")
-        .select("id, texto, alternativas, resposta_correta, materia, assunto, dificuldade")
+        .select("id, pergunta, alternativa_a, alternativa_b, alternativa_c, alternativa_d, alternativa_e, resposta_correta, disciplina, peso")
         .in("id", ids);
       if (qs) setQuestoes(qs as any);
     }
     setLoading(false);
   }
 
-  async function removeFavorito(questaoId: number) {
-    const userData = JSON.parse(window.sessionStorage.getItem("tatica_user") || "{}");
-    await supabase
-      .from("favoritos")
-      .delete()
-      .eq("usuario_email", userData.email)
-      .eq("questao_id", questaoId);
-    
-    setQuestoes(questoes.filter(q => q.id !== questaoId));
-  }
+  const alternativas = (q: Questao) => [
+    q.alternativa_a, q.alternativa_b, q.alternativa_c, q.alternativa_d, q.alternativa_e
+  ];
 
-  function handleAnswer(index: number) {
-    setSelectedAnswer(index);
+  function handleAnswer(letra: string) {
+    setSelectedAnswer(letra);
     setShowAnswer(true);
   }
 
   function nextQuestion() {
     setCurrentIndex(Math.min(currentIndex + 1, questoes.length - 1));
-    setShowAnswer(false);
-    setSelectedAnswer(null);
+    setShowAnswer(false); setSelectedAnswer(null);
   }
 
   function prevQuestion() {
     setCurrentIndex(Math.max(currentIndex - 1, 0));
-    setShowAnswer(false);
-    setSelectedAnswer(null);
+    setShowAnswer(false); setSelectedAnswer(null);
   }
 
-  if (loading) {
-    return (
-      <div style={{ display: "flex", justifyContent: "center", padding: "4rem" }}>
-        <div style={{ color: c.gold }}>Carregando...</div>
-      </div>
-    );
-  }
+  if (loading) return <div style={{ display: "flex", justifyContent: "center", padding: "4rem" }}><div style={{ color: c.gold }}>Carregando...</div></div>;
 
   if (questoes.length === 0) {
     return (
@@ -107,9 +83,7 @@ export default function Favoritos({ colors }: { colors?: any }) {
         <h1 style={{ color: c.gold, marginBottom: "1rem" }}>⭐ Favoritos</h1>
         <div style={{ background: c.backgroundSecondary, padding: "2rem", borderRadius: "8px", textAlign: "center" }}>
           <p style={{ color: c.textSecondary }}>Nenhuma questão favoritada ainda.</p>
-          <p style={{ color: c.textSecondary, marginTop: "0.5rem" }}>
-            Durante os exercícios, clique no ícone ⭐ para favoritar uma questão.
-          </p>
+          <p style={{ color: c.textSecondary, marginTop: "0.5rem" }}>Durante os exercícios, clique no ícone ⭐ para favoritar uma questão.</p>
         </div>
       </div>
     );
@@ -122,32 +96,8 @@ export default function Favoritos({ colors }: { colors?: any }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
         <h1 style={{ color: c.gold }}>⭐ Favoritos ({questoes.length})</h1>
         <div style={{ display: "flex", gap: "0.5rem" }}>
-          <button
-            onClick={() => setMode("lista")}
-            style={{
-              padding: "8px 16px",
-              background: mode === "lista" ? c.gold : c.backgroundTertiary,
-              color: mode === "lista" ? "#000" : c.text,
-              border: `1px solid ${c.border}`,
-              borderRadius: "4px",
-              cursor: "pointer"
-            }}
-          >
-            Lista
-          </button>
-          <button
-            onClick={() => setMode("estudo")}
-            style={{
-              padding: "8px 16px",
-              background: mode === "estudo" ? c.gold : c.backgroundTertiary,
-              color: mode === "estudo" ? "#000" : c.text,
-              border: `1px solid ${c.border}`,
-              borderRadius: "4px",
-              cursor: "pointer"
-            }}
-          >
-            Estudo
-          </button>
+          <button onClick={() => setMode("lista")} style={{ padding: "8px 16px", background: mode === "lista" ? c.gold : c.backgroundTertiary, color: mode === "lista" ? "#000" : c.text, border: `1px solid ${c.border}`, borderRadius: "4px", cursor: "pointer" }}>Lista</button>
+          <button onClick={() => setMode("estudo")} style={{ padding: "8px 16px", background: mode === "estudo" ? c.gold : c.backgroundTertiary, color: mode === "estudo" ? "#000" : c.text, border: `1px solid ${c.border}`, borderRadius: "4px", cursor: "pointer" }}>Estudo</button>
         </div>
       </div>
 
@@ -156,19 +106,11 @@ export default function Favoritos({ colors }: { colors?: any }) {
           {questoes.map((q, i) => (
             <div key={q.id} style={{ background: c.backgroundSecondary, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "1rem" }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                <span style={{ color: c.gold, fontSize: "0.875rem" }}>{q.materia}</span>
-                <button
-                  onClick={() => removeFavorito(q.id)}
-                  style={{ background: c.red, color: "#fff", border: "none", padding: "4px 8px", borderRadius: "4px", cursor: "pointer", fontSize: "0.75rem" }}
-                >
-                  Remover
-                </button>
+                <span style={{ color: c.gold, fontSize: "0.875rem" }}>{q.disciplina}</span>
+                <button onClick={() => { const userData = JSON.parse(window.sessionStorage.getItem("tatica_user") || "{}"); supabase.from("favoritos").delete().eq("usuario_email", userData.email).eq("questao_id", parseInt(q.id)); setQuestoes(questoes.filter(x => x.id !== q.id)); }} style={{ background: c.red, color: "#fff", border: "none", padding: "4px 8px", borderRadius: "4px", cursor: "pointer", fontSize: "0.75rem" }}>Remover</button>
               </div>
-              <p style={{ color: c.text, marginBottom: "0.5rem" }}>{q.texto.substring(0, 150)}...</p>
-              <div style={{ color: c.textSecondary, fontSize: "0.75rem" }}>
-                {q.assunto && <span style={{ marginRight: "1rem" }}>📚 {q.assunto}</span>}
-                {q.dificuldade && <span>🎯 {q.dificuldade}</span>}
-              </div>
+              <p style={{ color: c.text, marginBottom: "0.5rem" }}>{q.pergunta.substring(0, 150)}...</p>
+              <div style={{ color: c.textSecondary, fontSize: "0.75rem" }}>Resp: {q.resposta_correta}</div>
             </div>
           ))}
         </div>
@@ -176,60 +118,39 @@ export default function Favoritos({ colors }: { colors?: any }) {
         <div>
           <div style={{ background: c.backgroundSecondary, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "1.5rem" }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem" }}>
-              <span style={{ color: c.gold }}>{currentQ.materia}</span>
+              <span style={{ color: c.gold }}>{currentQ.disciplina}</span>
               <span style={{ color: c.textSecondary }}>{currentIndex + 1}/{questoes.length}</span>
             </div>
-            
-            <p style={{ fontSize: "1.125rem", marginBottom: "1.5rem" }}>{currentQ.texto}</p>
-            
+            <p style={{ fontSize: "1.125rem", marginBottom: "1.5rem" }}>{currentQ.pergunta}</p>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              {currentQ.alternativas.map((alt, i) => {
+              {["A", "B", "C", "D", "E"].map((letra, i) => {
+                const txt = alternativas(currentQ)[i];
+                if (!txt) return null;
                 let bg = c.backgroundTertiary;
                 if (showAnswer) {
-                  if (i === currentQ.resposta_correta) bg = c.green;
-                  else if (i === selectedAnswer) bg = c.red;
+                  if (letra === currentQ.resposta_correta) bg = c.green;
+                  else if (letra === selectedAnswer) bg = c.red;
                 }
                 return (
-                  <button
-                    key={i}
-                    onClick={() => handleAnswer(i)}
-                    disabled={showAnswer}
-                    style={{
-                      padding: "1rem",
-                      background: bg,
-                      border: `1px solid ${c.border}`,
-                      borderRadius: "8px",
-                      textAlign: "left",
-                      color: c.text,
-                      cursor: showAnswer ? "default" : "pointer",
-                      opacity: showAnswer && i !== currentQ.resposta_correta && i !== selectedAnswer ? 0.5 : 1
-                    }}
-                  >
-                    <strong>{String.fromCharCode(65 + i)}.</strong> {alt}
+                  <button key={letra} onClick={() => handleAnswer(letra)} disabled={showAnswer}
+                    style={{ padding: "1rem", background: bg, border: `1px solid ${c.border}`, borderRadius: "8px", textAlign: "left", color: c.text, cursor: showAnswer ? "default" : "pointer", opacity: showAnswer && letra !== currentQ.resposta_correta && letra !== selectedAnswer ? 0.5 : 1 }}>
+                    <strong>{letra}.</strong> {txt}
                   </button>
                 );
               })}
             </div>
-
             {showAnswer && (
               <div style={{ marginTop: "1.5rem", padding: "1rem", background: c.backgroundTertiary, borderRadius: "8px" }}>
                 <div style={{ color: selectedAnswer === currentQ.resposta_correta ? c.green : c.red, fontWeight: "bold" }}>
                   {selectedAnswer === currentQ.resposta_correta ? "✅ Correto!" : "❌ Incorreto"}
                 </div>
-                <div style={{ color: c.textSecondary, marginTop: "0.5rem" }}>
-                  Resposta correta: {String.fromCharCode(65 + currentQ.resposta_correta)}
-                </div>
+                <div style={{ color: c.textSecondary, marginTop: "0.5rem" }}>Resposta correta: {currentQ.resposta_correta}</div>
               </div>
             )}
           </div>
-
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: "1rem" }}>
-            <button onClick={prevQuestion} disabled={currentIndex === 0} style={{ padding: "8px 16px", background: c.backgroundTertiary, color: c.text, border: `1px solid ${c.border}`, borderRadius: "4px", cursor: "pointer" }}>
-              Anterior
-            </button>
-            <button onClick={nextQuestion} disabled={currentIndex === questoes.length - 1} style={{ padding: "8px 16px", background: c.gold, color: "#000", border: "none", borderRadius: "4px", cursor: "pointer" }}>
-              Próxima
-            </button>
+            <button onClick={prevQuestion} disabled={currentIndex === 0} style={{ padding: "8px 16px", background: c.backgroundTertiary, color: c.text, border: `1px solid ${c.border}`, borderRadius: "4px", cursor: "pointer" }}>Anterior</button>
+            <button onClick={nextQuestion} disabled={currentIndex === questoes.length - 1} style={{ padding: "8px 16px", background: c.gold, color: "#000", border: "none", borderRadius: "4px", cursor: "pointer" }}>Próxima</button>
           </div>
         </div>
       )}

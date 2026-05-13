@@ -14,12 +14,24 @@ interface Question {
   peso: number;
 }
 
+const HIERARQUIA = [
+  { valor: "Aluno Soldado", ordem: 1 },
+  { valor: "Soldado", ordem: 2 },
+  { valor: "Cabo", ordem: 3 },
+  { valor: "Aluno a Sargento", ordem: 4 },
+  { valor: "3º Sargento", ordem: 5 },
+  { valor: "2º Sargento", ordem: 6 },
+  { valor: "1º Sargento", ordem: 7 },
+  { valor: "Sub Tenente", ordem: 8 },
+];
+
 interface User {
   id: string;
   nome: string;
   email: string;
   aprovado: boolean;
   criado_em: string;
+  patente: string;
 }
 
 interface Result {
@@ -34,6 +46,18 @@ interface Result {
   criado_em: string;
 }
 
+interface Pdf {
+  id: number;
+  titulo: string;
+  descricao: string;
+  disciplina: string;
+  categoria: string;
+  url: string;
+  tamanho: number;
+  paginas: number;
+  created_at: string;
+}
+
 interface DetalheQuestao {
   questao_id: string;
   disciplina: string;
@@ -46,7 +70,7 @@ export default function Admin() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [results, setResults] = useState<Result[]>([]);
-  const [activeTab, setActiveTab] = useState<"questions" | "users" | "results">("questions");
+  const [activeTab, setActiveTab] = useState<"questions" | "users" | "results" | "pdfs">("questions");
   const [loading, setLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
@@ -59,9 +83,10 @@ export default function Admin() {
     alternativa_e: "",
     resposta_correta: "A",
     disciplina: "CLPAP",
-    peso: "1.0"
+    peso: "1.0",
+    tipo: "simulado"
   });
-  const [newStudent, setNewStudent] = useState({ nome: "", email: "" });
+  const [newStudent, setNewStudent] = useState({ nome: "", email: "", patente: "" });
   const [showStudentForm, setShowStudentForm] = useState(false);
   const [expandedResult, setExpandedResult] = useState<number | null>(null);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
@@ -69,25 +94,108 @@ export default function Admin() {
   const [importText, setImportText] = useState("");
   const [importStatus, setImportStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [importResult, setImportResult] = useState({ success: 0, errors: 0 });
+  const [pdfs, setPdfs] = useState<Pdf[]>([]);
+  const [newPdf, setNewPdf] = useState({
+    titulo: "",
+    descricao: "",
+    disciplina: "",
+    categoria: "",
+    url: "",
+    tamanho: 0,
+    paginas: 0
+  });
+  const [showPdfForm, setShowPdfForm] = useState(false);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     loadData();
+    loadPdfs();
   }, []);
 
-  async function loadData() {
-    const { data: q } = await supabase.from("questao").select("*");
-    if (q) setQuestions(q as any);
+    async function loadData() {
+      const { data: q } = await supabase.from("questao").select("*");
+      if (q) setQuestions(q as any);
 
-    const { data: u } = await supabase.from("usuario").select("*").order("criado_em", { ascending: false });
-    if (u) setUsers(u as any);
+      const { data: u } = await supabase.from("usuario").select("*").order("criado_em", { ascending: false });
+      if (u) setUsers(u as any);
 
-    const { data: r } = await supabase.from("resultado").select("*").order("criado_em", { ascending: false });
-    if (r) setResults(r as any);
+      const { data: r } = await supabase.from("resultado").select("*").order("criado_em", { ascending: false });
+      if (r) setResults(r as any);
 
-    setLoading(false);
-  }
+      setLoading(false);
+    }
 
-  async function addQuestion() {
+    async function loadPdfs() {
+      const { data } = await supabase
+        .from("biblioteca")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      if (data) setPdfs(data as any);
+    }
+
+      async function addPdf() {
+        if (!pdfFile) {
+          alert("Selecione um arquivo!");
+          return;
+        }
+
+        setUploading(true);
+        const fileExt = pdfFile.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("biblioteca-pdfs")
+          .upload(fileName, pdfFile);
+
+        if (uploadError) {
+          alert("Erro ao fazer upload: " + uploadError.message);
+          setUploading(false);
+          return;
+        }
+
+        const { data: urlData } = await supabase.storage
+          .from("biblioteca-pdfs")
+          .createSignedUrl(fileName, 315360000);
+
+        const pdfUrl = urlData?.signedUrl || "";
+
+        const pdf = {
+          titulo: newPdf.titulo,
+          descricao: newPdf.descricao,
+          disciplina: newPdf.disciplina,
+          categoria: newPdf.categoria,
+          url: pdfUrl,
+          tamanho: Math.round(pdfFile.size / 1024),
+          paginas: newPdf.paginas
+        };
+
+        const { data } = await supabase.from("biblioteca").insert([pdf]).select();
+        if (data) setPdfs([data[0] as Pdf, ...pdfs]);
+        setUploading(false);
+        alert("PDF adicionado à biblioteca!");
+        setNewPdf({
+          titulo: "",
+          descricao: "",
+          disciplina: "",
+          categoria: "",
+          url: "",
+          tamanho: 0,
+          paginas: 0
+        });
+        setPdfFile(null);
+        setShowPdfForm(false);
+    }
+
+    async function deletePdf(id: number) {
+      if (confirm("Excluir PDF da biblioteca?")) {
+        await supabase.from("biblioteca").delete().eq("id", id);
+        setPdfs(pdfs.filter(p => p.id !== id));
+      }
+    }
+
+    async function addQuestion() {
     const q = {
       id: Date.now().toString(),
       pergunta: newQuestion.pergunta,
@@ -98,7 +206,8 @@ export default function Admin() {
       alternativa_e: newQuestion.alternativa_e,
       resposta_correta: newQuestion.resposta_correta,
       disciplina: newQuestion.disciplina,
-      peso: parseFloat(newQuestion.peso)
+      peso: parseFloat(newQuestion.peso),
+      tipo: newQuestion.tipo
     };
 
     await supabase.from("questao").insert([q]);
@@ -113,7 +222,8 @@ export default function Admin() {
       alternativa_e: "",
       resposta_correta: "A",
       disciplina: "CLPAP",
-      peso: "1.0"
+      peso: "1.0",
+      tipo: "simulado"
     });
   }
 
@@ -234,21 +344,22 @@ export default function Admin() {
   }
 
   async function createStudent() {
-    if (!newStudent.nome || !newStudent.email) {
-      alert("Preencha nome e email!");
-      return;
-    }
-    const student = {
-      id: Date.now().toString(),
-      nome: newStudent.nome,
-      email: newStudent.email,
-      aprovado: false,
-      criado_em: new Date().toISOString()
+      if (!newStudent.nome || !newStudent.email) {
+        alert("Preencha nome e email!");
+        return;
+      }
+      const student = {
+        id: Date.now().toString(),
+        nome: newStudent.nome,
+        email: newStudent.email,
+        aprovado: false,
+        criado_em: new Date().toISOString(),
+        patente: newStudent.patente || "Aluno Soldado"
     };
     await supabase.from("usuario").insert([student]);
     setUsers([student, ...users]);
     alert("Aluno criado! Agora ele precisa ser autorizado.");
-    setNewStudent({ nome: "", email: "" });
+    setNewStudent({ nome: "", email: "", patente: "" });
     setShowStudentForm(false);
   }
 
@@ -268,10 +379,10 @@ export default function Admin() {
           placeholder="Senha do Admin"
           value={adminPassword}
           onChange={(e) => setAdminPassword(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "admin123") setIsAuthorized(true); else alert("Senha incorreta!"); }}}
+onKeyDown={async (e) => { if (e.key === "Enter") { const r = await fetch("/api/check-admin", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: adminPassword }) }); const d = await r.json(); if (d.valid) setIsAuthorized(true); else alert("Senha incorreta!"); }}}
           style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "12px", borderRadius: "4px", width: "300px", textAlign: "center" }}
         />
-        <button onClick={() => { if (adminPassword === "admin123") setIsAuthorized(true); else alert("Senha incorreta!"); }} style={{ background: "#ffd700", color: "#000", fontWeight: "bold", padding: "12px 24px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+        <button onClick={async () => { const r = await fetch("/api/check-admin", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: adminPassword }) }); const d = await r.json(); if (d.valid) setIsAuthorized(true); else alert("Senha incorreta!"); }} style={{ background: "#ffd700", color: "#000", fontWeight: "bold", padding: "12px 24px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
           ENTRAR
         </button>
       </div>
@@ -324,18 +435,29 @@ export default function Admin() {
         </div>
       </div>
 
-      {/* Abas */}
-      <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem" }}>
-        <button onClick={() => setActiveTab("questions")} style={{ padding: "12px 24px", background: activeTab === "questions" ? "#ffd700" : "#1a1a1a", color: activeTab === "questions" ? "#000" : "#fff", border: "1px solid #333", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
-          QUESTÕES ({questions.length})
-        </button>
-        <button onClick={() => setActiveTab("users")} style={{ padding: "12px 24px", background: activeTab === "users" ? "#ffd700" : "#1a1a1a", color: activeTab === "users" ? "#000" : "#fff", border: "1px solid #333", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
-          ALUNOS ({users.length})
-        </button>
-        <button onClick={() => setActiveTab("results")} style={{ padding: "12px 24px", background: activeTab === "results" ? "#ffd700" : "#1a1a1a", color: activeTab === "results" ? "#000" : "#fff", border: "1px solid #333", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
-          RESULTADOS ({results.length})
-        </button>
-      </div>
+        {/* Abas */}
+          <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem" }}>
+            <button onClick={() => setActiveTab("questions")} style={{ padding: "12px 24px", background: activeTab === 
+  "questions" ? "#ffd700" : "#1a1a1a", color: activeTab === "questions" ? "#000" : "#fff", border: "1px solid #333", 
+  borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
+              QUEST���ES ({questions.length})
+            </button>
+            <button onClick={() => setActiveTab("users")} style={{ padding: "12px 24px", background: activeTab === 
+  "users" ? "#ffd700" : "#1a1a1a", color: activeTab === "users" ? "#000" : "#fff", border: "1px solid #333", 
+  borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
+              ALUNOS ({users.length})
+            </button>
+            <button onClick={() => setActiveTab("pdfs")} style={{ padding: "12px 24px", background: activeTab === 
+  "pdfs" ? "#ffd700" : "#1a1a1a", color: activeTab === "pdfs" ? "#000" : "#fff", border: "1px solid #333", 
+  borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
+              BIBLIOTECA PDF ({pdfs.length})
+            </button>
+            <button onClick={() => setActiveTab("results")} style={{ padding: "12px 24px", background: activeTab === 
+  "results" ? "#ffd700" : "#1a1a1a", color: activeTab === "results" ? "#000" : "#fff", border: "1px solid #333", 
+  borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
+              RESULTADOS ({results.length})
+            </button>
+          </div>
 
       {/* TAB QUESTÕES */}
       {activeTab === "questions" && (
@@ -374,6 +496,10 @@ export default function Admin() {
                   <option value="CP">CP</option>
                 </select>
                 <input type="text" placeholder="Peso" value={newQuestion.peso} onChange={(e) => setNewQuestion({ ...newQuestion, peso: e.target.value })} style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "12px", borderRadius: "4px", width: "80px" }} />
+                <select value={newQuestion.tipo} onChange={(e) => setNewQuestion({ ...newQuestion, tipo: e.target.value })} style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "12px", borderRadius: "4px" }}>
+                  <option value="simulado">Simulado</option>
+                  <option value="exercicio">Exercício</option>
+                </select>
                 <button onClick={addQuestion} style={{ background: "#ffd700", color: "#000", fontWeight: "bold", padding: "12px 24px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
                   Adicionar
                 </button>
@@ -439,16 +565,26 @@ export default function Admin() {
                   onChange={(e) => setNewStudent({ ...newStudent, nome: e.target.value })}
                   style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "12px", borderRadius: "4px" }}
                 />
-                <input
-                  type="email"
-                  placeholder="Email do aluno"
-                  value={newStudent.email}
-                  onChange={(e) => setNewStudent({ ...newStudent, email: e.target.value })}
-                  style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "12px", borderRadius: "4px" }}
-                />
-                <button onClick={createStudent} style={{ background: "#22c55e", color: "#fff", fontWeight: "bold", padding: "12px 24px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
-                  CRIAR ALUNO
-                </button>
+                  <input
+                    type="email"
+                    placeholder="Email do aluno"
+                    value={newStudent.email}
+                    onChange={(e) => setNewStudent({ ...newStudent, email: e.target.value })}
+                    style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "12px", borderRadius: "4px" }}
+                  />
+                  <select
+                    value={newStudent.patente}
+                    onChange={(e) => setNewStudent({ ...newStudent, patente: e.target.value })}
+                    style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "12px", borderRadius: "4px" }}
+                  >
+                    <option value="">Selecione a patente</option>
+                    {HIERARQUIA.map(h => (
+                      <option key={h.valor} value={h.valor}>{h.valor}</option>
+                    ))}
+                  </select>
+                  <button onClick={createStudent} style={{ background: "#22c55e", color: "#fff", fontWeight: "bold", padding: "12px 24px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+                    CRIAR ALUNO
+                  </button>
               </div>
             </div>
           )}
@@ -462,13 +598,16 @@ export default function Admin() {
             ) : (
               users.map((u) => (
                 <div key={u.id} style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1rem" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                    <span style={{ color: "#fff", fontWeight: "bold" }}>{u.nome}</span>
-                    <span style={{ color: u.aprovado ? "#22c55e" : "#ef4444", fontWeight: "bold" }}>
-                      {u.aprovado ? "ATIVO" : "PENDENTE"}
-                    </span>
-                  </div>
-                  <p style={{ marginBottom: "0.5rem", color: "#9ca3af" }}>{u.email}</p>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                      <span style={{ color: "#fff", fontWeight: "bold" }}>{u.nome}</span>
+                      <span style={{ color: u.aprovado ? "#22c55e" : "#ef4444", fontWeight: "bold" }}>
+                        {u.aprovado ? "ATIVO" : "PENDENTE"}
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                      <span style={{ color: "#9ca3af" }}>{u.email}</span>
+                      <span style={{ color: "#ffd700", fontSize: "0.875rem", fontWeight: "bold" }}>{u.patente || "Aluno Soldado"}</span>
+                    </div>
                   <div style={{ display: "flex", gap: "1rem" }}>
                     {!u.aprovado && (
                       <button onClick={() => approveUser(u.id)} style={{ background: "#22c55e", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
@@ -590,6 +729,128 @@ export default function Admin() {
               ))
             )}
           </div>
+        </>
+      )}
+
+      {/* TAB BIBLIOTECA PDF */}
+      {activeTab === "pdfs" && (
+        <>
+          <div style={{ marginBottom: "2rem" }}>
+            <button onClick={() => setShowPdfForm(!showPdfForm)} style={{ background: "#ffd700", color: "#000", fontWeight: "bold", padding: "12px 24px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+              {showPdfForm ? "CANCELAR" : "+ ADICIONAR PDF"}
+            </button>
+          </div>
+          
+          {showPdfForm && (
+            <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem", marginBottom: "2rem" }}>
+              <h2 style={{ color: "#ffd700", marginBottom: "1rem" }}>Adicionar PDF à Biblioteca</h2>
+              <div style={{ display: "grid", gap: "1rem" }}>
+                <input
+                  type="text"
+                  placeholder="Título do PDF"
+                  value={newPdf.titulo}
+                  onChange={(e) => setNewPdf({ ...newPdf, titulo: e.target.value })}
+                  style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "12px", borderRadius: "4px" }}
+                />
+                <input
+                  type="text"
+                  placeholder="Descrição (opcional)"
+                  value={newPdf.descricao}
+                  onChange={(e) => setNewPdf({ ...newPdf, descricao: e.target.value })}
+                  style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "12px", borderRadius: "4px" }}
+                />
+                <select
+                  value={newPdf.disciplina}
+                  onChange={(e) => setNewPdf({ ...newPdf, disciplina: e.target.value })}
+                  style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "12px", borderRadius: "4px" }}
+                >
+                  <option value="">Selecione a disciplina</option>
+                  <option value="CLPAP">CLPAP</option>
+                  <option value="CPJM">CPJM</option>
+                  <option value="CLIPM">CLIPM</option>
+                  <option value="CP">CP</option>
+                </select>
+                <select
+                  value={newPdf.categoria}
+                  onChange={(e) => setNewPdf({ ...newPdf, categoria: e.target.value })}
+                  style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "12px", borderRadius: "4px" }}
+                >
+                  <option value="">Selecione a categoria</option>
+                  <option value="Apostila">Apostila</option>
+                  <option value="Resumo">Resumo</option>
+                  <option value="Questões">Questões</option>
+                  <option value="Prova Anterior">Prova Anterior</option>
+                  <option value="Material Complementar">Material Complementar</option>
+                </select>
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx,.ppt,.pptx,.png,.jpg,.jpeg"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setPdfFile(file);
+                      if (!newPdf.titulo) {
+                        setNewPdf({ ...newPdf, titulo: file.name.replace(/\.[^/.]+$/, "") });
+                      }
+                    }
+                  }}
+                  style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "12px", borderRadius: "4px" }}
+                />
+                {pdfFile && (
+                  <div style={{ color: "#22c55e", fontSize: "0.875rem" }}>
+                    ✓ {pdfFile.name} ({(pdfFile.size / 1024).toFixed(1)} KB)
+                  </div>
+                )}
+                <div style={{ display: "flex", gap: "1rem" }}>
+                  <input
+                    type="number"
+                    placeholder="Nº páginas (opcional)"
+                    value={newPdf.paginas}
+                    onChange={(e) => setNewPdf({ ...newPdf, paginas: parseInt(e.target.value) || 0 })}
+                    style={{ background: "#0d0d0d", border: "1px solid #333", color: "#fff", padding: "12px", borderRadius: "4px", width: "100%" }}
+                  />
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
+                <button onClick={addPdf} disabled={uploading} style={{ background: uploading ? "#6b7280" : "#22c55e", color: "#fff", fontWeight: "bold", padding: "12px 24px", borderRadius: "4px", border: "none", cursor: uploading ? "not-allowed" : "pointer" }}>
+                  {uploading ? "ENVIANDO..." : "Adicionar PDF"}
+                </button>
+                <button onClick={() => setShowPdfForm(false)} style={{ background: "#6b7280", color: "#fff", padding: "12px 24px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
+          
+          <h2 style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#ffd700", marginBottom: "1rem" }}>Biblioteca de PDFs ({pdfs.length})</h2>
+          {pdfs.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "3rem", color: "#9ca3af" }}>Nenhum PDF cadastrado ainda</div>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1rem" }}>
+              {pdfs.map((pdf) => (
+                <div key={pdf.id} style={{ background: "#1a1a1a", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "1rem" }}>
+                    <div>
+                      <h3 style={{ color: "#fff", margin: "0 0 0.5rem 0" }}>{pdf.titulo}</h3>
+                      <p style={{ color: "#9ca3af", margin: "0 0 0.5rem 0", fontSize: "0.875rem" }}>{pdf.descricao || "Sem descrição"}</p>
+                      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                        <span style={{ background: "#333", color: "#ffd700", padding: "0.25rem 0.75rem", borderRadius: "4px", fontSize: "0.75rem" }}>{pdf.disciplina}</span>
+                        {pdf.categoria && <span style={{ background: "#333", color: "#ffd700", padding: "0.25rem 0.75rem", borderRadius: "4px", fontSize: "0.75rem" }}>{pdf.categoria}</span>}
+                      </div>
+                    </div>
+                    <button onClick={() => deletePdf(pdf.id)} style={{ background: "#ef4444", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer", fontSize: "0.875rem" }}>
+                      Excluir
+                    </button>
+                  </div>
+                  <div style={{ marginTop: "0.5rem", fontSize: "0.75rem", color: "#6b7280" }}>
+                    {pdf.paginas > 0 && <span>{pdf.paginas} páginas · </span>}
+                    {pdf.tamanho > 0 && <span>{pdf.tamanho} KB · </span>}
+                    <a href={pdf.url} target="_blank" rel="noopener noreferrer" style={{ color: "#3b82f6", textDecoration: "none" }}>Abrir PDF</a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </>
       )}
 

@@ -158,12 +158,12 @@ export default function Dashboard({ colors }: DashboardProps) {
   const getRanking = async () => {
     const { data } = await supabase
       .from("resultado")
-      .select("nome_usuario, pf")
+      .select("email_usuario, pf")
       .order("pf", { ascending: false })
       .limit(50);
     
     if (data) {
-      const myRank = data.findIndex((r: any) => r.nome_usuario === user?.name);
+      const myRank = data.findIndex((r: any) => r.email_usuario === user?.email);
       return myRank >= 0 ? myRank + 1 : null;
     }
     return null;

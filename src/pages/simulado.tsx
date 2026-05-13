@@ -60,7 +60,7 @@ export default function Simulado({ colors }: { colors?: any }) {
   }, [timeLeft, submitted]);
 
   async function loadQuestions() {
-    const { data } = await supabase.from("questao").select("*");
+    const { data } = await supabase.from("questao").select("*").eq("tipo", "simulado");
     if (data && data.length > 0) {
       setQuestions(data as any);
     } else {
@@ -171,6 +171,11 @@ export default function Simulado({ colors }: { colors?: any }) {
     // Salvar erros para revisão inteligente
     await saveErrorsToReview();
 
+    localStorage.setItem("ultimoResultado", JSON.stringify({
+      acertos, erros, pf,
+      questions: questions.length,
+      clpapScore, cpfjmScore, clipmScore, cpScore
+    }));
     router.push("/resultado");
   }
 

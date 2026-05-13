@@ -73,7 +73,7 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
   }, [router]);
 
   async function loadQuestions() {
-    const { data } = await supabase.from("questao").select("*");
+    const { data } = await supabase.from("questao").select("*").eq("tipo", "exercicio");
     if (data) setQuestions(data as any);
     setLoading(false);
   }
@@ -85,14 +85,10 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
 
   function getFilteredQuestions(): Questao[] {
     let filtered = [...questions];
-    
-    if (filterDisciplina !== "todas") {
-      filtered = filtered.filter(q => q.disciplina === filterDisciplina);
+    const disc = mode === "bloco" ? filterBloco : filterDisciplina;
+    if (disc !== "todas" && disc !== "todos") {
+      filtered = filtered.filter(q => q.disciplina === disc);
     }
-    if (filterBloco !== "todos") {
-      filtered = filtered.filter(q => q.disciplina === filterBloco);
-    }
-    
     return filtered;
   }
 
@@ -206,12 +202,12 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
     const q = exerciseQuestions[currentIndex];
     if (!q || !user) return;
     const qid = parseInt(q.id);
-    
-    const { data: fav } = await supabase.from("favoritos").select("id").eq("usuario_email", user.email).eq("questao_id", qid).single();
-    const { data: diff } = await supabase.from("questoes_dificeis").select("id").eq("usuario_email", user.email).eq("questao_id", qid).single();
-    
-    setIsFavorite(!!fav);
-    setIsDifficult(!!diff);
+    try {
+      const { data: fav } = await supabase.from("favoritos").select("id").eq("usuario_email", user.email).eq("questao_id", qid).maybeSingle();
+      const { data: diff } = await supabase.from("questoes_dificeis").select("id").eq("usuario_email", user.email).eq("questao_id", qid).maybeSingle();
+      setIsFavorite(!!fav);
+      setIsDifficult(!!diff);
+    } catch {}
   }
 
   if (loading) {
@@ -339,6 +335,9 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
                 <option value={15}>15 questões</option>
                 <option value={20}>20 questões</option>
                 <option value={30}>30 questões</option>
+                <option value={50}>50 questões</option>
+                <option value={100}>100 questões</option>
+                <option value={999}>Todas as questões</option>
               </select>
             </div>
             

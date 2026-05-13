@@ -60,9 +60,29 @@ export default function Login({ colors }: LoginProps) {
       return;
     }
 
+    const hash = await sha256(password);
+    if (!user.senha) {
+      setError("Conta sem senha. Solicite ao admin que crie uma nova conta ou redefina sua senha.");
+      setLoading(false);
+      return;
+    }
+    if (user.senha !== hash) {
+      setError("Senha incorreta!");
+      setLoading(false);
+      return;
+    }
+
     window.sessionStorage.setItem("tatica_user", JSON.stringify({ email: user.email, name: user.nome }));
     router.push("/dashboard");
     setLoading(false);
+  }
+
+  async function sha256(text: string) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(text);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
   }
 
   async function handleSignUp() {
@@ -93,10 +113,12 @@ export default function Login({ colors }: LoginProps) {
       return;
     }
 
+    const hash = await sha256(password);
     const newUser = {
       id: Date.now().toString(),
       nome: email.split("@")[0],
       email: email,
+      senha: hash,
       aprovado: false,
       criado_em: new Date().toISOString()
     };

@@ -4,16 +4,26 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { supabase } from "../lib/supabase";
 
+const GRADUACOES = [
+  "Aluno Soldado",
+  "Soldado",
+  "Cabo",
+  "Aluno a Sargento",
+  "3º Sargento",
+  "2º Sargento",
+  "1º Sargento",
+  "Sub Tenente",
+];
+
 const LEVELS = [
-  { name: "Recruta", minPF: 0, maxPF: 2, icon: "🌱", color: "#6b7280" },
-  { name: "Soldado", minPF: 2.01, maxPF: 3.5, icon: "⭐", color: "#22c55e" },
-  { name: "Cabo", minPF: 3.51, maxPF: 4.5, icon: "⭐⭐", color: "#3b82f6" },
-  { name: "Sargento", minPF: 4.51, maxPF: 5.5, icon: "⭐⭐⭐", color: "#8b5cf6" },
-  { name: "Subtenente", minPF: 5.51, maxPF: 6.5, icon: "🔷", color: "#f59e0b" },
-  { name: "Tenente", minPF: 6.51, maxPF: 7.5, icon: "💎", color: "#ef4444" },
-  { name: "Capitão", minPF: 7.51, maxPF: 8.5, icon: "👑", color: "#ffd700" },
-  { name: "Major", minPF: 8.51, maxPF: 9.5, icon: "🏆", color: "#ff8c00" },
-  { name: "Coronel", minPF: 9.51, maxPF: 10, icon: "⚜️", color: "#dc2626" },
+  { name: "Aluno Soldado", minPF: 0, maxPF: 1.25, icon: "🪖", color: "#6b7280" },
+  { name: "Soldado", minPF: 1.26, maxPF: 2.5, icon: "⭐", color: "#22c55e" },
+  { name: "Cabo", minPF: 2.51, maxPF: 3.75, icon: "⭐⭐", color: "#3b82f6" },
+  { name: "Aluno a Sargento", minPF: 3.76, maxPF: 5.0, icon: "⭐⭐⭐", color: "#8b5cf6" },
+  { name: "3º Sargento", minPF: 5.01, maxPF: 6.0, icon: "🔰", color: "#f59e0b" },
+  { name: "2º Sargento", minPF: 6.01, maxPF: 7.0, icon: "💎", color: "#ef4444" },
+  { name: "1º Sargento", minPF: 7.01, maxPF: 8.5, icon: "👑", color: "#ffd700" },
+  { name: "Sub Tenente", minPF: 8.51, maxPF: 10, icon: "⚜️", color: "#dc2626" },
 ];
 
 const MEDALS = [
@@ -43,6 +53,8 @@ export default function Perfil({ colors }: { colors?: any }) {
     purple: "#a855f7"
   };
 
+  const [userGraduacao, setUserGraduacao] = useState("Aluno Soldado");
+
   useEffect(() => {
     const userData = window.sessionStorage.getItem("tatica_user");
     if (!userData) {
@@ -51,7 +63,13 @@ export default function Perfil({ colors }: { colors?: any }) {
     }
     const userObj = JSON.parse(userData);
     loadResults(userObj.email);
+    loadUserData(userObj.email);
   }, [router]);
+
+  async function loadUserData(email: string) {
+    const { data } = await supabase.from("usuario").select("patente").eq("email", email).single();
+    if (data?.patente) setUserGraduacao(data.patente);
+  }
 
   async function loadResults(email: string) {
     const { data } = await supabase
@@ -118,6 +136,8 @@ export default function Perfil({ colors }: { colors?: any }) {
       </div>
 
       <div style={{ background: c.backgroundSecondary, border: `1px solid ${c.border}`, borderRadius: "12px", padding: "2rem", textAlign: "center", marginBottom: "1.5rem" }}>
+        <div style={{ fontSize: "0.8rem", color: c.textSecondary, marginBottom: "0.25rem" }}>GRADUAÇÃO</div>
+        <div style={{ color: c.gold, fontSize: "1.2rem", fontWeight: "bold", marginBottom: "1rem" }}>{userGraduacao}</div>
         <div style={{ fontSize: "4rem" }}>{current?.icon}</div>
         <div style={{ color: current?.color, fontSize: "2rem", fontWeight: "bold" }}>{current?.name}</div>
         

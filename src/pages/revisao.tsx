@@ -75,7 +75,7 @@ export default function Revisao({ colors }: RevisaoPageProps) {
   }, [router]);
 
   async function loadQuestions() {
-    const { data } = await supabase.from("questao").select("*");
+    const { data } = await supabase.from("questao").select("*").in("tipo", ["simulado", "exercicio"]);
     if (data) setQuestions(data as any);
   }
 
