@@ -116,10 +116,23 @@ export default function Biblioteca({ colors }: { colors?: any }) {
   const [loading, setLoading] = useState(true);
   const [pdfs, setPdfs] = useState<Pdf[]>([]);
   const [viewerPdf, setViewerPdf] = useState<Pdf | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const [filterDisciplina, setFilterDisciplina] = useState("todas");
   const [filterCategoria, setFilterCategoria] = useState("todas");
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    const userStr = window.sessionStorage.getItem("tatica_user");
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user.email && user.email.includes("admin")) {
+          setIsAdmin(true);
+        }
+      } catch {}
+    }
+  }, []);
   
   const c = colors || {
     background: "#0d0d0d", backgroundSecondary: "#1a1a1a",
@@ -172,6 +185,7 @@ export default function Biblioteca({ colors }: { colors?: any }) {
     <div style={{ padding: "1rem" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
         <h1 style={{ color: c.gold, margin: 0, fontSize: "1.5rem" }}>📚 Biblioteca de Estudos</h1>
+        {isAdmin && (
         <button
           onClick={() => setShowGeradorIA(!showGeradorIA)}
           style={{
@@ -186,10 +200,12 @@ export default function Biblioteca({ colors }: { colors?: any }) {
         >
           {showGeradorIA ? "✕ Fechar" : "📝 Adicionar Questões"}
         </button>
+        )}
       </div>
 
       {showGeradorIA && <GeradorIA colors={c} />}
 
+      {isAdmin && (
       {/* Filtros */}
       <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
         <input
@@ -236,6 +252,7 @@ export default function Biblioteca({ colors }: { colors?: any }) {
           {categorias.map(cat => <option key={cat} value={cat}>{cat}</option>)}
         </select>
       </div>
+      )}
 
       {loading ? (
         <div style={{ color: c.textSecondary }}>Carregando...</div>
