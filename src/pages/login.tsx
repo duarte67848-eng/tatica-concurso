@@ -30,52 +30,40 @@ export default function Login({ colors }: LoginProps) {
     red: "#ef4444"
   };
 
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+async function handleLogin(e: React.FormEvent) {
+     e.preventDefault();
+     setLoading(true);
+     setError("");
 
-    if (!email || !password) {
-      setError("Preencha email e senha");
-      setLoading(false);
-      return;
-    }
+     if (!email) {
+       setError("Preencha o email");
+       setLoading(false);
+       return;
+     }
 
-    const { data: users } = await supabase
-      .from("usuario")
-      .select("*")
-      .eq("email", email)
-      .limit(1);
+     const { data: users } = await supabase
+       .from("usuario")
+       .select("*")
+       .eq("email", email)
+       .limit(1);
 
-    if (!users || users.length === 0) {
-      setError("Usuário não cadastrado. Crie uma conta primeiro.");
-      setLoading(false);
-      return;
-    }
+     if (!users || users.length === 0) {
+       setError("Usuário não cadastrado. Crie uma conta primeiro.");
+       setLoading(false);
+       return;
+     }
 
-    const user = users[0];
-    if (!user.aprovado) {
-      setError("Aguarde aprovação do administrador!");
-      setLoading(false);
-      return;
-    }
+     const user = users[0];
+     if (!user.aprovado) {
+       setError("Aguarde aprovação do administrador!");
+       setLoading(false);
+       return;
+     }
 
-    const hash = await sha256(password);
-    if (!user.senha) {
-      setError("Conta sem senha. Solicite ao admin que crie uma nova conta ou redefina sua senha.");
-      setLoading(false);
-      return;
-    }
-    if (user.senha !== hash) {
-      setError("Senha incorreta!");
-      setLoading(false);
-      return;
-    }
-
-    window.sessionStorage.setItem("tatica_user", JSON.stringify({ email: user.email, name: user.nome }));
-    router.push("/dashboard");
-    setLoading(false);
-  }
+     window.sessionStorage.setItem("tatica_user", JSON.stringify({ email: user.email, name: user.nome }));
+     router.push("/dashboard");
+     setLoading(false);
+   }
 
   async function sha256(text: string) {
     const encoder = new TextEncoder();
@@ -155,16 +143,16 @@ export default function Login({ colors }: LoginProps) {
             />
           </div>
           
-          <div>
-            <label style={{ display: "block", color: c.textSecondary, marginBottom: "0.5rem", fontSize: "0.875rem" }}>SENHA</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={{ background: c.background, border: `1px solid ${c.border}`, color: c.text, padding: "12px", borderRadius: "4px", width: "100%" }}
-              placeholder="••••••••"
-            />
-          </div>
+<div style={{display: "none"}}>
+             <label style={{ display: "block", color: c.textSecondary, marginBottom: "0.5rem", fontSize: "0.875rem" }}>SENHA</label>
+             <input
+               type="password"
+               value={password}
+               onChange={(e) => setPassword(e.target.value)}
+               style={{ background: c.background, border: `1px solid ${c.border}`, color: c.text, padding: "12px", borderRadius: "4px", width: "100%" }}
+               placeholder="••••••••"
+             />
+           </div>
 
           {error && (
             <div style={{ color: c.red, fontSize: "0.875rem", textAlign: "center", padding: "0.5rem", border: `1px solid ${c.red}`, borderRadius: "4px" }}>
