@@ -337,16 +337,31 @@ const pdf = {
   }
 
 async function rejectUser(id: string) {
-    if (confirm("Bloquear este usuário? Ele não poderá mais fazer login.")) {
+    const userToBlock = users.find(u => u.id === id);
+    if (!userToBlock) {
+      alert("Usuário não encontrado!");
+      return;
+    }
+    
+    if (confirm("Bloquear " + userToBlock.email + "? Ele não poderá mais fazer login.")) {
       try {
         const { data, error } = await supabase.from("usuario").update({ aprovado: false }).eq("id", id);
-        if (error) throw error;
         
-        setUsers(users.filter(u => u.id !== id));
-        alert("Usuário bloqueado! Ele não poderá mais fazer login.");
+        if (error) {
+          console.log("Erro detalhado:", error);
+          alert("Erro do Supabase: " + error.message);
+          return;
+        }
+        
+        if (data && data.length > 0) {
+          setUsers(users.filter(u => u.id !== id));
+          alert("✅ " + userToBlock.email + " foi bloqueado! Não consegue mais fazer login.");
+        } else {
+          alert("⚠️ Nenhuma alteração feita. Verifique se o usuário ainda existe.");
+        }
       } catch (error) {
         console.error("Erro ao bloquear usuário:", error);
-        alert("Erro ao bloquear usuário: " + error.message);
+        alert("Erro ao bloquear: " + error.message);
       }
     }
   }
