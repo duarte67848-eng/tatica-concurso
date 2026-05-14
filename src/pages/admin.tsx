@@ -117,7 +117,7 @@ export default function Admin() {
       const { data: q } = await supabase.from("questao").select("*");
       if (q) setQuestions(q as any);
 
-      const { data: u } = await supabase.from("usuario").select("*").order("criado_em", { ascending: false });
+      const { data: u } = await supabase.from("usuario").select("*").eq("aprovado", true).order("criado_em", { ascending: false });
       if (u) setUsers(u as any);
 
       const { data: r } = await supabase.from("resultado").select("*").order("criado_em", { ascending: false });
