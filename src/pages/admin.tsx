@@ -345,23 +345,17 @@ async function rejectUser(id: string) {
     
     if (confirm("Bloquear " + userToBlock.email + "? Ele não poderá mais fazer login.")) {
       try {
-        const { data, error } = await supabase.from("usuario").update({ aprovado: false }).eq("id", id);
+        const { error } = await supabase.from("usuario").update({ aprovado: false }).eq("id", id);
         
         if (error) {
-          console.log("Erro detalhado:", error);
-          alert("Erro do Supabase: " + error.message);
+          alert("❌ Erro: " + error.message);
           return;
         }
         
-        if (data && data.length > 0) {
-          setUsers(users.filter(u => u.id !== id));
-          alert("✅ " + userToBlock.email + " foi bloqueado! Não consegue mais fazer login.");
-        } else {
-          alert("⚠️ Nenhuma alteração feita. Verifique se o usuário ainda existe.");
-        }
-      } catch (error) {
-        console.error("Erro ao bloquear usuário:", error);
-        alert("Erro ao bloquear: " + error.message);
+        setUsers(users.filter(u => u.id !== id));
+        alert("✅ " + userToBlock.email + " foi bloqueado!");
+      } catch (err) {
+        alert("❌ Erro: " + err.message);
       }
     }
   }
