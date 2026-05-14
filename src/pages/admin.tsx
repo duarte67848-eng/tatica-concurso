@@ -336,16 +336,20 @@ const pdf = {
     }
   }
 
-  async function rejectUser(id: string) {
-    if (confirm("Excluir usuário?")) {
+async function rejectUser(id: string) {
+    if (confirm("Bloquear este usuário? Ele não poderá mais fazer login.")) {
       try {
-        await supabase.from("usuario").delete().eq("id", id);
+        const { data, error } = await supabase.from("usuario").update({ aprovado: false }).eq("id", id);
+        if (error) throw error;
+        
         setUsers(users.filter(u => u.id !== id));
-        alert("Usuário excluído com sucesso!");
+        alert("Usuário bloqueado! Ele não poderá mais fazer login.");
       } catch (error) {
-        console.error("Erro ao excluir usuário:", error);
-        alert("Erro ao excluir usuário: " + error.message);
+        console.error("Erro ao bloquear usuário:", error);
+        alert("Erro ao bloquear usuário: " + error.message);
       }
+    }
+  }
     }
   }
 
