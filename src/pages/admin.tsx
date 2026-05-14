@@ -161,15 +161,15 @@ export default function Admin() {
 
         const pdfUrl = urlData?.signedUrl || "";
 
-        const pdf = {
-          titulo: newPdf.titulo,
-          descricao: newPdf.descricao,
-          disciplina: newPdf.disciplina,
-          categoria: newPdf.categoria,
-          url: pdfUrl,
-          tamanho: Math.round(pdfFile.size / 1024),
-          paginas: newPdf.paginas
-        };
+const pdf = {
+      titulo: newPdf.titulo,
+      descricao: newPdf.descricao,
+      disciplina: newPdf.disciplina || "CP",
+      categoria: newPdf.categoria || "Geral",
+      url: pdfUrl,
+      tamanho: Math.round(pdfFile.size / 1024),
+      paginas: newPdf.paginas
+    };
 
         const { data } = await supabase.from("biblioteca").insert([pdf]).select();
         if (data) setPdfs([data[0] as Pdf, ...pdfs]);
