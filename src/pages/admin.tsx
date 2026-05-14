@@ -336,7 +336,8 @@ const pdf = {
     }
   }
 
-async function rejectUser(id: string) {
+// Bloquear usuário - não consegue mais fazer login
+  async function blockUser(id: string) {
     const userToBlock = users.find(u => u.id === id);
     if (!userToBlock) {
       alert("Usuário não encontrado!");
@@ -353,12 +354,35 @@ async function rejectUser(id: string) {
         }
         
         setUsers(users.filter(u => u.id !== id));
-        alert("✅ " + userToBlock.email + " foi bloqueado!");
+        alert("✅ " + userToBlock.email + " foi BLOQUEADO!");
       } catch (err) {
         alert("❌ Erro: " + err.message);
       }
     }
   }
+
+  // Excluir usuário - remove completamente do banco
+  async function deleteUser(id: string) {
+    const userToDelete = users.find(u => u.id === id);
+    if (!userToDelete) {
+      alert("Usuário não encontrado!");
+      return;
+    }
+    
+    if (confirm("EXCLUIR " + userToDelete.email + " COMPLETAMENTE do sistema? Esta ação não pode ser desfeita!")) {
+      try {
+        const { error } = await supabase.from("usuario").delete().eq("id", id);
+        
+        if (error) {
+          alert("❌ Erro: " + error.message);
+          return;
+        }
+        
+        setUsers(users.filter(u => u.id !== id));
+        alert("✅ " + userToDelete.email + " foi EXCLUÍDO do sistema!");
+      } catch (err) {
+        alert("❌ Erro: " + err.message);
+      }
     }
   }
 
@@ -627,13 +651,16 @@ onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAut
                       <span style={{ color: "#9ca3af" }}>{u.email}</span>
                       <span style={{ color: "#ffd700", fontSize: "0.875rem", fontWeight: "bold" }}>{u.patente || "Aluno Soldado"}</span>
                     </div>
-                  <div style={{ display: "flex", gap: "1rem" }}>
+                  <div style={{ display: "flex", gap: "0.5rem" }}>
                     {!u.aprovado && (
                       <button onClick={() => approveUser(u.id)} style={{ background: "#22c55e", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
                         AUTORIZAR
                       </button>
                     )}
-                    <button onClick={() => rejectUser(u.id)} style={{ background: "#ef4444", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+                    <button onClick={() => blockUser(u.id)} style={{ background: "#f59e0b", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+                      BLOQUEAR
+                    </button>
+                    <button onClick={() => deleteUser(u.id)} style={{ background: "#ef4444", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
                       EXCLUIR
                     </button>
                   </div>
