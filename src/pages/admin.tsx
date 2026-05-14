@@ -338,8 +338,14 @@ const pdf = {
 
   async function rejectUser(id: string) {
     if (confirm("Excluir usuário?")) {
-      await supabase.from("usuario").delete().eq("id", id);
-      setUsers(users.filter(u => u.id !== id));
+      try {
+        await supabase.from("usuario").delete().eq("id", id);
+        setUsers(users.filter(u => u.id !== id));
+        alert("Usuário excluído com sucesso!");
+      } catch (error) {
+        console.error("Erro ao excluir usuário:", error);
+        alert("Erro ao excluir usuário: " + error.message);
+      }
     }
   }
 
