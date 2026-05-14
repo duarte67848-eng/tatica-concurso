@@ -140,12 +140,12 @@ export default function Biblioteca({ colors }: { colors?: any }) {
     border: "#333333", text: "#ffffff", textSecondary: "#a0a0a0", gold: "#ffd700",
   };
 
-  const disciplinas = [...new Set(pdfs.map(p => p.disciplina || "Sem Disciplina"))];
+  const disciplinas = [...new Set(pdfs.map(p => p.disciplina).filter(Boolean))];
   const categorias = [...new Set(pdfs.map(p => p.categoria).filter(Boolean))];
 
   // Aplica filtros
   const filtered = pdfs.filter(p => {
-    const disc = p.disciplina || "Sem Disciplina";
+    const disc = p.disciplina;
     if (filterDisciplina !== "todas" && disc !== filterDisciplina) return false;
     if (filterCategoria !== "todas" && p.categoria !== filterCategoria) return false;
     if (search && !p.titulo.toLowerCase().includes(search.toLowerCase())) return false;
@@ -193,7 +193,7 @@ export default function Biblioteca({ colors }: { colors?: any }) {
         <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
           {/* Organizado por Disciplinas (pastas) */}
           {disciplinas.map(disciplina => {
-            const disciplinDocs = filtered.filter(p => (p.disciplina || "Sem Disciplina") === disciplina);
+            const disciplinDocs = filtered.filter(p => p.disciplina === disciplina);
             if (disciplinDocs.length === 0) return null;
             
             const categoriasDisc = [...new Set(disciplinDocs.map(p => p.categoria).filter(Boolean))];
