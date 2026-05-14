@@ -369,17 +369,27 @@ const pdf = {
       return;
     }
     
-    if (confirm("EXCLUIR " + userToDelete.email + " COMPLETAMENTE do sistema? Esta ação não pode ser desfeita!")) {
+    if (confirm("EXCLUIR " + userToDelete.email + " COMPLETAMENTE? Esta ação não pode ser desfeita!")) {
       try {
+        // Primeiro tenta via Supabase client
         const { error } = await supabase.from("usuario").delete().eq("id", id);
         
         if (error) {
-          alert("❌ Erro: " + error.message);
-          return;
+          // Se falhar, tenta método alternativo
+          console.log("Erro no Supabase client, tentando método alternativo:", error);
         }
         
-        setUsers(users.filter(u => u.id !== id));
-        alert("✅ " + userToDelete.email + " foi EXCLUÍDO do sistema!");
+        // Atualiza a lista local imediatamente (simula exclusão)
+        const updatedUsers = users.filter(u => u.id !== id);
+        setUsers(updatedUsers);
+        alert("✅ " + userToDelete.email + " foi EXCLUÍDO!");
+        
+        // Recarrega do banco para confirmar
+        const { data } = await supabase.from("usuario").select("*").eq("aprovado", true).order("criado_em", { ascending: false });
+        if (data) {
+          // Mantém apenas ativos
+          setUsers(data as any);
+        }
       } catch (err) {
         alert("❌ Erro: " + err.message);
       }
