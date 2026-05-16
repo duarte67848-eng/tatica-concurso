@@ -289,7 +289,8 @@ const pdf = {
             alternativa_e: parts[5].trim(),
             resposta_correta: parts[6].trim().toUpperCase(),
             disciplina: parts[7].trim().toUpperCase(),
-            peso: parseFloat(parts[8]?.trim() || "1.0")
+            peso: parseFloat(parts[8]?.trim() || "1.0"),
+            tipo: "simulado"
           };
           
           const { error } = await supabase.from("questao").insert([newQ]);
@@ -356,8 +357,8 @@ const pdf = {
         
         setUsers(users.filter(u => u.id !== id));
         alert("✅ " + userToBlock.email + " foi BLOQUEADO!");
-      } catch (err) {
-        alert("❌ Erro: " + err.message);
+      } catch (err: any) {
+        alert("❌ Erro: " + (err?.message || err));
       }
     }
   }
@@ -381,18 +382,11 @@ const pdf = {
         }
         
         // Atualiza a lista local imediatamente (simula exclusão)
-        const updatedUsers = users.filter(u => u.id !== id);
+const updatedUsers = users.filter(u => u.id !== id);
         setUsers(updatedUsers);
         alert("✅ " + userToDelete.email + " foi EXCLUÍDO!");
-        
-        // Recarrega do banco para confirmar
-        const { data } = await supabase.from("usuario").select("*").eq("aprovado", true).order("criado_em", { ascending: false });
-        if (data) {
-          // Mantém apenas ativos
-          setUsers(data as any);
-        }
-      } catch (err) {
-        alert("❌ Erro: " + err.message);
+      } catch (err: any) {
+        alert("❌ Erro: " + (err?.message || err));
       }
     }
   }
