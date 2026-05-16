@@ -60,7 +60,7 @@ export default function Simulado({ colors }: { colors?: any }) {
   }, [timeLeft, submitted]);
 
   async function loadQuestions() {
-    const { data } = await supabase.from("questao").select("*").eq("tipo", "simulado").limit(80);
+    const { data } = await supabase.from("questao").select("*").eq("tipo", "simulado").order("id", { ascending: true }).limit(80);
     if (data) {
       setQuestions(data as any);
     } else {
@@ -197,7 +197,7 @@ export default function Simulado({ colors }: { colors?: any }) {
       </div>
 
        <div style={{ marginBottom: "1rem", color: c.textSecondary }}>
-         Questão {currentIndex + 1} de 80
+         Questão {currentIndex + 1} de {questions.length}
        </div>
 
        <div style={{ background: `linear-gradient(180deg, ${c.backgroundSecondary} 0%, ${c.background} 100%)`, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "1.5rem", marginBottom: "1.5rem" }}>
