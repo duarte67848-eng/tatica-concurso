@@ -60,22 +60,11 @@ export default function Simulado({ colors }: { colors?: any }) {
   }, [timeLeft, submitted]);
 
   async function loadQuestions() {
-    const { data } = await supabase.from("questao").select("*").eq("tipo", "simulado");
-    if (data && data.length > 0) {
+    const { data } = await supabase.from("questao").select("*").eq("tipo", "simulado").limit(80);
+    if (data) {
       setQuestions(data as any);
     } else {
-      setQuestions([
-        { id: "1", pergunta: "Qual é o sinônimo de 'meticuloso'?", alternativa_a: "Cuidadoso", alternativa_b: "Negligente", alternativa_c: "Rápido", alternativa_d: "Desorganizado", alternativa_e: "Indiferente", resposta_correta: "A", disciplina: "CLPAP", peso: 1.0 },
-        { id: "2", pergunta: "O soldado _____ no expediente.", alternativa_a: "compareceu", alternativa_b: "chegou", alternativa_c: "saiu", alternativa_d: "ficou", alternativa_e: "foi", resposta_correta: "A", disciplina: "CLPAP", peso: 1.0 },
-        { id: "3", pergunta: "Qual é o crime militar de abandono do posto?", alternativa_a: "Deserção", alternativa_b: "Fuga", alternativa_c: "Insolência", alternativa_d: "Apreensão", alternativa_e: "Abandono", resposta_correta: "A", disciplina: "CPJM", peso: 1.25 },
-        { id: "4", pergunta: "Conforme o CPM, crime de motim é:", alternativa_a: "Revolta coletiva", alternativa_b: "Desvio de dinheiro", alternativa_c: "Agressão a superior", alternativa_d: "Fuga individual", alternativa_e: "Desordem", resposta_correta: "A", disciplina: "CLIPM", peso: 1.75 },
-        { id: "5", pergunta: "O princípio da hierarquia militar estabelece que:", alternativa_a: "ordens devem ser cumpridas", alternativa_b: "todos são iguais", alternativa_c: "soldados podem questionar", alternativa_d: "oficiais não precisam de ordem", alternativa_e: "hierarquia é opcional", resposta_correta: "A", disciplina: "CP", peso: 2.0 },
-        { id: "6", pergunta: "Qual o significado de 'procedência'?", alternativa_a: "Local de origem", alternativa_b: "Tempo decorrido", alternativa_c: "Modo de agir", alternativa_d: "Quantidade", alternativa_e: "Qualidade", resposta_correta: "A", disciplina: "CLPAP", peso: 1.0 },
-        { id: "7", pergunta: "A cadeia de comando militar é:", alternativa_a: "hierárquica", alternativa_b: "democrática", alternativa_c: "flexível", alternativa_d: "opcional", alternativa_e: "aleatória", resposta_correta: "A", disciplina: "CP", peso: 2.0 },
-        { id: "8", pergunta: "Crime militar que consiste em insulting superior:", alternativa_a: "Insolência", alternativa_b: "Deserção", alternativa_c: "Motim", alternativa_d: "Fuga", alternativa_e: "Abandono", resposta_correta: "A", disciplina: "CLIPM", peso: 1.75 },
-        { id: "9", pergunta: "O Código Penal Militar é aplicado a:", alternativa_a: "militares", alternativa_b: "civis", alternativa_c: "estrangeiros apenas", alternativa_d: "políticos", alternativa_e: "empresários", resposta_correta: "A", disciplina: "CPJM", peso: 1.25 },
-        { id: "10", pergunta: "O que é 'frequência' no contexto militar?", alternativa_a: "Presença regular", alternativa_b: "Forma de comunicação", alternativa_c: "Tipo de uniforme", alternativa_d: "Postura", alternativa_e: "Distintivo", resposta_correta: "A", disciplina: "CLPAP", peso: 1.0 },
-      ]);
+      setQuestions([]);
     }
     setLoading(false);
   }
