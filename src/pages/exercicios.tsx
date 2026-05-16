@@ -385,13 +385,13 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
 
       {mode === "exercicio" && currentQuestion && (
         <div style={{ background: c.backgroundSecondary, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "1.5rem" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem", flexWrap: "wrap", gap: "0.5rem" }}>
-            <div>
-              <span style={{ color: c.gold, fontWeight: "bold" }}>{currentQuestion.disciplina}</span>
-              <span style={{ color: c.textSecondary, marginLeft: "1rem" }}>
-                Questão {currentIndex + 1} de {exerciseQuestions.length}
-              </span>
-            </div>
+           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem", flexWrap: "wrap", gap: "0.5rem" }}>
+             <div style={{ display: "flex", alignItems: "center" }}>
+               <span style={{ color: c.gold, fontWeight: "bold" }}>{currentQuestion.disciplina}</span>
+               <span style={{ color: c.textSecondary, marginLeft: "1rem" }}>
+                 Questão {currentIndex + 1} de 80
+               </span>
+             </div>
             <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
               <span style={{ color: c.green }}>✅ {score.acertos}</span>
               <span style={{ color: c.red }}>❌ {score.erros}</span>
@@ -404,9 +404,14 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
             </div>
           </div>
 
-          <div style={{ fontSize: "1.125rem", marginBottom: "1.5rem", color: c.text, lineHeight: "1.6" }}>
-            {currentQuestion.pergunta}
-          </div>
+           <div style={{ display: "flex", alignItems: "center", marginBottom: "1rem" }}>
+             <div style={{ background: c.green, color: "#000", fontWeight: "bold", fontSize: "0.875rem", padding: "2px 8px", borderRadius: "12px", marginRight: "1rem" }}>
+               QUESTÃO {currentIndex + 1}
+             </div>
+             <div style={{ fontSize: "1.125rem", color: c.text, lineHeight: "1.6", flex: 1 }}>
+               {currentQuestion.pergunta}
+             </div>
+           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             {["A", "B", "C", "D", "E"].map(opt => {

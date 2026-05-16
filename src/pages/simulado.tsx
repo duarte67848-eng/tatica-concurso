@@ -207,13 +207,18 @@ export default function Simulado({ colors }: { colors?: any }) {
         </div>
       </div>
 
-      <div style={{ marginBottom: "1rem", color: c.textSecondary }}>
-        Questão {currentIndex + 1} de {questions.length}
-      </div>
+       <div style={{ marginBottom: "1rem", color: c.textSecondary }}>
+         Questão {currentIndex + 1} de 80
+       </div>
 
-      <div style={{ background: `linear-gradient(180deg, ${c.backgroundSecondary} 0%, ${c.background} 100%)`, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "1.5rem", marginBottom: "1.5rem" }}>
-        <div style={{ color: c.gold, fontSize: "0.875rem", marginBottom: "1rem" }}>
-          DISCIPLINA: {currentQuestion.disciplina} | PESO: {currentQuestion.peso}
+       <div style={{ background: `linear-gradient(180deg, ${c.backgroundSecondary} 0%, ${c.background} 100%)`, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "1.5rem", marginBottom: "1.5rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+          <div style={{ color: c.gold, fontSize: "0.875rem" }}>
+            DISCIPLINA: {currentQuestion.disciplina} | PESO: {currentQuestion.peso}
+          </div>
+          <div style={{ background: c.gold, color: "#000", fontWeight: "bold", fontSize: "0.875rem", padding: "2px 8px", borderRadius: "12px" }}>
+            QUESTÃO {currentIndex + 1}
+          </div>
         </div>
         <div style={{ fontSize: "1.125rem", marginBottom: "1.5rem", color: c.text, lineHeight: "1.6" }}>{currentQuestion.pergunta}</div>
         

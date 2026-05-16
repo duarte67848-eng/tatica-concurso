@@ -12,6 +12,7 @@ interface Question {
   resposta_correta: string;
   disciplina: string;
   peso: number;
+  tipo: string;
 }
 
 const HIERARQUIA = [
@@ -453,6 +454,9 @@ onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAut
   const approvedUsers = users.filter(u => u.aprovado).length;
   const pendingUsers = users.filter(u => !u.aprovado).length;
   const avgPF = results.length > 0 ? (results.reduce((acc, r) => acc + r.pf, 0) / results.length).toFixed(2) : "0.00";
+  const totalQuestions = questions.length;
+  const simulationQuestions = questions.filter(q => q.tipo === "simulado").length;
+  const exerciseQuestions = questions.filter(q => q.tipo === "exercicio").length;
 
   return (
     <div>
@@ -475,8 +479,12 @@ onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAut
           <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#ef4444" }}>{pendingUsers}</div>
         </div>
         <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem", textAlign: "center" }}>
-          <div style={{ color: "#9ca3af", fontSize: "0.875rem", marginBottom: "0.5rem" }}>QUESTÕES</div>
-          <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#3b82f6" }}>{questions.length}</div>
+          <div style={{ color: "#9ca3af", fontSize: "0.875rem", marginBottom: "0.5rem" }}>TOTAL QUESTÕES</div>
+          <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#3b82f6" }}>{totalQuestions}</div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem", marginTop: "0.5rem" }}>
+            <span>Simulado: {simulationQuestions}</span>
+            <span>Exercício: {exerciseQuestions}</span>
+          </div>
         </div>
         <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem", textAlign: "center" }}>
           <div style={{ color: "#9ca3af", fontSize: "0.875rem", marginBottom: "0.5rem" }}>SIMULADOS</div>
@@ -490,11 +498,11 @@ onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAut
 
         {/* Abas */}
           <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem" }}>
-            <button onClick={() => setActiveTab("questions")} style={{ padding: "12px 24px", background: activeTab === 
-  "questions" ? "#ffd700" : "#1a1a1a", color: activeTab === "questions" ? "#000" : "#fff", border: "1px solid #333", 
-  borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
-              QUEST���ES ({questions.length})
-            </button>
+             <button onClick={() => setActiveTab("questions")} style={{ padding: "12px 24px", background: activeTab === 
+   "questions" ? "#ffd700" : "#1a1a1a", color: activeTab === "questions" ? "#000" : "#fff", border: "1px solid #333", 
+   borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
+               QUESTÕES ({simulationQuestions} Sim / {exerciseQuestions} Ex)
+             </button>
             <button onClick={() => setActiveTab("users")} style={{ padding: "12px 24px", background: activeTab === 
   "users" ? "#ffd700" : "#1a1a1a", color: activeTab === "users" ? "#000" : "#fff", border: "1px solid #333", 
   borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
