@@ -1,6 +1,25 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+function getFeedbackEstrategico(res: any) {
+  if (!res || !res.detalhes) return "Continue treinando!";
+  
+  const pioresBlocos = Object.entries(res.detalhes as Record<string, {acertos: number, total: number}>)
+    .map(([nome, dados]) => ({ nome, taxa: dados.total > 0 ? (dados.acertos / dados.total) * 100 : 0 }))
+    .sort((a, b) => a.taxa - b.taxa);
+
+  const pior = pioresBlocos[0];
+  const pf = parseFloat(res.pf);
+
+  if (pf < 5) {
+    return `⚠️ **Alerta Estratégico:** Priorize o bloco **${pior.nome}** (${pior.taxa.toFixed(0)}% de acerto). Foque em revisar a teoria básica antes de novos exercícios.`;
+  } else if (pf < 7) {
+    return `📈 **Caminho da Aprovação:** O bloco **${pior.nome}** está puxando sua nota para baixo. Dedique 70% do seu tempo de estudo hoje para resolver questões específicas deste bloco.`;
+  } else {
+    return `🔥 **Nível Elite:** Você está muito bem! Refine os detalhes no bloco **${pior.nome}**. Você está pronto para aumentar a carga de simulados semanais.`;
+  }
+}
+
 export default function Resultado() {
   const [result, setResult] = useState<any>(null);
 
@@ -72,6 +91,10 @@ export default function Resultado() {
         <div style={{ marginBottom: "1rem" }}>
           <div style={{ color: "#9ca3af", fontSize: "0.875rem" }}>PONTUAÇÃO FINAL (PF)</div>
           <div style={{ fontSize: "3.75rem", fontWeight: "bold", color: "#ffd700" }}>{result.pf}</div>
+        </div>
+
+        <div style={{ background: "#262626", padding: "1rem", borderRadius: "8px", color: "#e5e7eb", fontSize: "0.95rem", lineHeight: "1.5", textAlign: "left", marginBottom: "1rem" }}>
+          {getFeedbackEstrategico(result)}
         </div>
 
         <div style={{ color: "#6b7280", fontSize: "0.875rem" }}>
