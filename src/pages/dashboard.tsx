@@ -613,9 +613,22 @@ const tendencia = evolution.length >= 2 ? (evolution[evolution.length - 1].media
               ) : (
                 (() => {
                   const blocos = results[0]?.detalhes;
-                  console.log("DEBUG_BLOCOS:", blocos); // Debug
-                  if (!blocos) return <p>Dados insuficientes para análise. Detalhes: {JSON.stringify(results[0])}</p>;
-                  const pioresBlocos = Object.entries(blocos as any)
+                  console.log("DEBUG_BLOCOS_RAW:", results[0]);
+                  console.log("DEBUG_BLOCOS_VALOR:", blocos);
+
+                  if (!blocos) return <p>Dados insuficientes para análise. (Nenhum bloco encontrado)</p>;
+
+                  // Se for string (caso antigo), tentamos converter
+                  let dadosParaAnalise = blocos;
+                  if (typeof blocos === 'string') {
+                    try {
+                      dadosParaAnalise = JSON.parse(blocos);
+                    } catch(e) {
+                      return <p>Erro ao ler dados antigos.</p>;
+                    }
+                  }
+
+                  const pioresBlocos = Object.entries(dadosParaAnalise as any)
                     .filter(([_, dados]: [string, any]) => dados.total > 0)
                     .map(([nome, dados]: [string, any]) => ({ nome, taxa: (dados.acertos / dados.total) * 100 }))
                     .sort((a, b) => a.taxa - b.taxa);
