@@ -279,7 +279,7 @@ export default function Dashboard({ colors }: DashboardProps) {
             <Card title="MELHOR PF" value={melhorPF.toFixed(2)} subtitle="Recorde pessoal" color={c.green} />
             <Card title="MÉDIA PF" value={mediaPF.toFixed(2)} subtitle=" média geral" color={c.blue} />
             <Card title="SIMULADOS" value={totalSimulados} subtitle="Total realizado" color={c.purple} />
-            <Card title="ACERTOS" value={totalAcertos} subtitle={`${percentualGeral.toFixed(1)}% overall`} color={c.green} />
+            <Card title="ACERTOS" value={totalAcertos} subtitle={`${percentualGeral.toFixed(1)}% geral`} color={c.green} />
             <Card title="ERROS" value={totalErros} subtitle="Para revisar" color={c.red} />
           </div>
 
