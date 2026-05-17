@@ -126,18 +126,15 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
     let exQuestions: Questao[] = [];
     
     if (mode === "livre") {
-      exQuestions = getFilteredQuestions().slice(0, filterQuantidade);
+      exQuestions = getFilteredQuestions().filter(q => q.tipo === "exercicio" || !q.tipo).slice(0, filterQuantidade);
     } else if (mode === "inteligente") {
       exQuestions = await getInteligentQuestions();
     } else if (mode === "bloco") {
       const disciplina = filterBloco;
-      console.log("Questions no state:", questions.length);
-      console.log("Disciplinas disponíveis:", [...new Set(questions.map(q => q.disciplina))]);
-      const blocoQuestions = questions.filter(q => q.disciplina === disciplina);
-      console.log("Encontradas para", disciplina, ":", blocoQuestions.length);
+      const blocoQuestions = questions.filter(q => q.disciplina === disciplina && (q.tipo === "exercicio" || !q.tipo));
       exQuestions = blocoQuestions.slice(0, filterQuantidade);
     } else if (mode === "rapido") {
-      exQuestions = getFilteredQuestions().slice(0, filterQuantidade);
+      exQuestions = getFilteredQuestions().filter(q => q.tipo === "exercicio" || !q.tipo).slice(0, filterQuantidade);
     }
     
     if (exQuestions.length === 0) {
