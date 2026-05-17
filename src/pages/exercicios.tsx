@@ -125,13 +125,13 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
     let exQuestions: Questao[] = [];
     
     if (mode === "livre") {
-      exQuestions = getFilteredQuestions().slice(0, filterQuantidade);
+      exQuestions = getFilteredQuestions().filter(q => q.tipo === "exercicio").slice(0, filterQuantidade);
     } else if (mode === "inteligente") {
       exQuestions = await getInteligentQuestions();
     } else if (mode === "bloco") {
-      exQuestions = questions.filter(q => q.disciplina === filterBloco).slice(0, filterQuantidade);
+      exQuestions = questions.filter(q => q.disciplina === filterBloco && q.tipo === "exercicio").slice(0, filterQuantidade);
     } else if (mode === "rapido") {
-      exQuestions = getFilteredQuestions().slice(0, filterQuantidade);
+      exQuestions = getFilteredQuestions().filter(q => q.tipo === "exercicio").slice(0, filterQuantidade);
     }
     
     if (exQuestions.length === 0) {
