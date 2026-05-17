@@ -73,8 +73,10 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
   }, [router]);
 
   async function loadQuestions() {
-    const { data } = await supabase.from("questao").select("*").eq("tipo", "exercicio");
-    if (data) setQuestions(data as any);
+    const { data } = await supabase.from("questao").select("*").eq("tipo", "exercicio").limit(200);
+    const { data: simData } = await supabase.from("questao").select("*").eq("tipo", "simulado").limit(200);
+    const allData = [...(data || []), ...(simData || [])];
+    if (allData.length > 0) setQuestions(allData as any);
     setLoading(false);
   }
 

@@ -70,6 +70,7 @@ interface DetalheQuestao {
 export default function Admin() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [blockedUsers, setBlockedUsers] = useState<User[]>([]);
   const [results, setResults] = useState<Result[]>([]);
   const [activeTab, setActiveTab] = useState<"questions" | "users" | "results" | "pdfs">("questions");
   const [loading, setLoading] = useState(true);
@@ -120,6 +121,9 @@ export default function Admin() {
 
       const { data: u } = await supabase.from("usuario").select("*").eq("aprovado", true).order("criado_em", { ascending: false });
       if (u) setUsers(u as any);
+
+      const { data: b } = await supabase.from("usuario").select("*").eq("aprovado", false).order("criado_em", { ascending: false });
+      if (b) setBlockedUsers(b as any);
 
       const { data: r } = await supabase.from("resultado").select("*").order("criado_em", { ascending: false });
       if (r) setResults(r as any);
@@ -357,6 +361,31 @@ const pdf = {
         
         setUsers(users.filter(u => u.id !== id));
         alert("✅ " + userToBlock.email + " foi BLOQUEADO!");
+      } catch (err: any) {
+        alert("❌ Erro: " + (err?.message || err));
+      }
+    }
+  }
+
+  // Desbloquear usuário - permite fazer login novamente
+  async function unblockUser(id: string) {
+    const userToUnblock = blockedUsers.find(u => u.id === id);
+    if (!userToUnblock) {
+      alert("Usuário não encontrado!");
+      return;
+    }
+    
+    if (confirm("Desbloquear " + userToUnblock.email + "? Ele poderá fazer login novamente.")) {
+      try {
+        const { error } = await supabase.from("usuario").update({ aprovado: true }).eq("id", id);
+        
+        if (error) {
+          alert("❌ Erro: " + error.message);
+          return;
+        }
+        
+        setBlockedUsers(blockedUsers.filter(u => u.id !== id));
+        alert("✅ " + userToUnblock.email + " foi DESBLOQUEADO!");
       } catch (err: any) {
         alert("❌ Erro: " + (err?.message || err));
       }
@@ -680,6 +709,39 @@ onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAut
               ))
             )}
           </div>
+
+          {/* USUÁRIOS BLOQUEADOS */}
+          {blockedUsers.length > 0 && (
+            <>
+              <h2 style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#ef4444", marginTop: "2rem", marginBottom: "1rem" }}>
+                Alunos Bloqueados ({blockedUsers.length})
+              </h2>
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                {blockedUsers.map((u) => (
+                  <div key={u.id} style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #ef4444", borderRadius: "8px", padding: "1rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                      <span style={{ color: "#fff", fontWeight: "bold" }}>{u.nome}</span>
+                      <span style={{ color: "#ef4444", fontWeight: "bold" }}>
+                        BLOQUEADO
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                      <span style={{ color: "#9ca3af" }}>{u.email}</span>
+                      <span style={{ color: "#ffd700", fontSize: "0.875rem", fontWeight: "bold" }}>{u.patente || "Aluno Soldado"}</span>
+                    </div>
+                  <div style={{ display: "flex", gap: "0.5rem" }}>
+                    <button onClick={() => unblockUser(u.id)} style={{ background: "#22c55e", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer", fontWeight: "bold" }}>
+                      DESBLOQUEAR
+                    </button>
+                    <button onClick={() => deleteUser(u.id)} style={{ background: "#ef4444", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+                      EXCLUIR
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            </>
+          )}
         </>
       )}
 
