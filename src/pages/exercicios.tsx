@@ -74,12 +74,9 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
   }, [router]);
 
   async function loadQuestions() {
-    const { data } = await supabase.from("questao").select("*").eq("tipo", "exercicio").limit(500);
+    const { data } = await supabase.from("questao").select("*").eq("tipo", "exercicio").order("disciplina").limit(500);
     console.log("Exercicio questions:", data?.length);
     if (data && data.length > 0) {
-      const counts = { CLPAP: 0, CPJM: 0, CLIPM: 0, CP: 0 };
-      data.forEach((q: any) => { if (counts[q.disciplina as keyof typeof counts] !== undefined) counts[q.disciplina as keyof typeof counts]++ });
-      console.log("Disciplinas:", counts);
       setQuestions(data as any);
     }
     setLoading(false);
@@ -135,7 +132,8 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
       exQuestions = await getInteligentQuestions();
     } else if (mode === "bloco") {
       const disciplina = filterBloco;
-      const blocoQuestions = questions.filter(q => q.disciplina === disciplina && (q.tipo === "exercicio" || !q.tipo));
+      const blocoQuestions = questions.filter(q => q.disciplina === disciplina);
+      console.log("CLPAP:", questions.filter(q => q.disciplina === "CLPAP").length);
       exQuestions = blocoQuestions.slice(0, filterQuantidade);
     } else if (mode === "rapido") {
       exQuestions = getFilteredQuestions().filter(q => q.tipo === "exercicio" || !q.tipo).slice(0, filterQuantidade);
