@@ -99,7 +99,7 @@ export default function Dashboard({ colors }: DashboardProps) {
   async function loadRanking() {
     const { data, error } = await supabase
       .from("resultado")
-      .select("email_usuario, nome_usuario, pf, created_at")
+      .select("email_usuario, nome_usuario, pf, criado_em")
       .order("pf", { ascending: false });
     
     console.log("Ranking data:", data, "error:", error);
