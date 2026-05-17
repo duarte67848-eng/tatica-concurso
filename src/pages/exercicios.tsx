@@ -131,7 +131,12 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
       exQuestions = await getInteligentQuestions();
     } else if (mode === "bloco") {
       const disciplina = filterBloco;
+      const disciplinaSemTipo = questions.filter(q => q.disciplina === disciplina && !q.tipo);
+      console.log("Sem tipo:", disciplinaSemTipo.length);
+      const disciplinaExercicio = questions.filter(q => q.disciplina === disciplina && q.tipo === "exercicio");
+      console.log("Exercicio:", disciplinaExercicio.length);
       const blocoQuestions = questions.filter(q => q.disciplina === disciplina && (q.tipo === "exercicio" || !q.tipo));
+      console.log("Total bloco:", blocoQuestions.length);
       exQuestions = blocoQuestions.slice(0, filterQuantidade);
     } else if (mode === "rapido") {
       exQuestions = getFilteredQuestions().filter(q => q.tipo === "exercicio" || !q.tipo).slice(0, filterQuantidade);
