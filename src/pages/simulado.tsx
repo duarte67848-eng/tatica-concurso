@@ -60,10 +60,13 @@ export default function Simulado({ colors }: { colors?: any }) {
   }, [timeLeft, submitted]);
 
   async function loadQuestions() {
-    const { data } = await supabase.from("questao").select("*").eq("tipo", "simulado").order("id", { ascending: true }).limit(200);
+    const { data } = await supabase.from("questao").select("*").eq("tipo", "simulado").order("id", { ascending: true }).limit(150);
     if (data) {
       const filtered = (data as any).filter((q: any) => q.pergunta && q.pergunta.trim() !== "");
       setQuestions(filtered.slice(0, 80));
+      if (filtered.length < 80) {
+        console.log("Atenção: apenas " + filtered.length + " questões válidas disponíveis");
+      }
     } else {
       setQuestions([]);
     }
