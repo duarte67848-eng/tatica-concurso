@@ -256,9 +256,9 @@ const tendencia = evolution.length >= 2 ? (evolution[evolution.length - 1].media
         <div style={{ marginBottom: "1.5rem", padding: "1rem", background: c.backgroundSecondary, borderRadius: "8px", border: `1px solid ${c.border}` }}>
           <span style={{ color: c.textSecondary }}>Operador: </span>
           <span style={{ color: c.gold, fontWeight: "bold" }}>{user.name}</span>
-          {ranking && (
+          {ranking.length > 0 && (
             <span style={{ marginLeft: "1rem", color: c.textSecondary }}>
-              | Ranking Geral: <span style={{ color: c.blue, fontWeight: "bold" }}>#{ranking}</span>
+              | Ranking Geral: <span style={{ color: c.blue, fontWeight: "bold" }}>#{ranking.findIndex((r: any) => r.email === user?.email) + 1}</span>
             </span>
           )}
         </div>
