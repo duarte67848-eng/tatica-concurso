@@ -74,7 +74,7 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
   }, [router]);
 
   async function loadQuestions() {
-    const { data } = await supabase.from("questao").select("*").limit(500);
+    const { data } = await supabase.from("questao").select("*").eq("tipo", "exercicio").limit(500);
     if (data && data.length > 0) setQuestions(data as any);
     setLoading(false);
   }
@@ -128,7 +128,9 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
     } else if (mode === "inteligente") {
       exQuestions = await getInteligentQuestions();
     } else if (mode === "bloco") {
-      exQuestions = questions.slice(0, filterQuantidade);
+      const disciplina = filterBloco;
+      const blocoQuestions = questions.filter(q => q.disciplina === disciplina);
+      exQuestions = blocoQuestions.slice(0, filterQuantidade);
     } else if (mode === "rapido") {
       exQuestions = getFilteredQuestions().filter(q => q.tipo === "exercicio" || !q.tipo).slice(0, filterQuantidade);
     }
