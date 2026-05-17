@@ -87,7 +87,7 @@ export default function Admin() {
   const [users, setUsers] = useState<User[]>([]);
   const [blockedUsers, setBlockedUsers] = useState<User[]>([]);
   const [results, setResults] = useState<Result[]>([]);
-  const [activeTab, setActiveTab] = useState<"questions" | "users" | "results" | "pdfs" | "questionsSimulado" | "questionsExercicio">("questions");
+  const [activeTab, setActiveTab] = useState<"questions" | "users" | "results" | "pdfs" | "questionsSimulado" | "questionsExercicio">("questionsSimulado");
   const [loading, setLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
