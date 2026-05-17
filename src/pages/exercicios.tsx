@@ -135,7 +135,7 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
       exQuestions = await getInteligentQuestions();
     } else if (mode === "bloco") {
       const disciplina = filterBloco;
-      const blocoQuestions = questions.filter(q => q.disciplina === disciplina);
+      const blocoQuestions = questions.filter(q => q.disciplina === disciplina && (q.tipo === "exercicio" || !q.tipo));
       exQuestions = blocoQuestions.slice(0, filterQuantidade);
     } else if (mode === "rapido") {
       exQuestions = getFilteredQuestions().filter(q => q.tipo === "exercicio" || !q.tipo).slice(0, filterQuantidade);
