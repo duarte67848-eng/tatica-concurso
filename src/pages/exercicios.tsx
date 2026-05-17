@@ -129,9 +129,8 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
     } else if (mode === "inteligente") {
       exQuestions = await getInteligentQuestions();
     } else if (mode === "bloco") {
-      console.log("DEBUG bloco: filterBloco=", filterBloco, "questions=", questions.length);
-      const blocoQuestions = questions.filter(q => q.disciplina === filterBloco);
-      console.log("DEBUG bloco: encontrado=", blocoQuestions.length);
+      const disciplina = filterBloco || "CLPAP";
+      const blocoQuestions = questions.filter(q => q.disciplina === disciplina);
       exQuestions = blocoQuestions.slice(0, filterQuantidade);
     } else if (mode === "rapido") {
       exQuestions = getFilteredQuestions().filter(q => q.tipo === "exercicio" || q.tipo === "simulado").slice(0, filterQuantidade);
