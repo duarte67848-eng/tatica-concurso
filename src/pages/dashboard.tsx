@@ -613,30 +613,33 @@ const tendencia = evolution.length >= 2 ? (evolution[evolution.length - 1].media
               ) : (
                 (() => {
                   const blocos = results[0]?.detalhes;
-                  console.log("DEBUG_BLOCOS_RAW:", results[0]);
-                  console.log("DEBUG_BLOCOS_VALOR:", blocos);
-
-                  if (!blocos) return <p>Dados insuficientes para análise. (Nenhum bloco encontrado)</p>;
-
-                  // Se for string (caso antigo), tentamos converter
-                  let dadosParaAnalise = blocos;
-                  if (typeof blocos === 'string') {
-                    try {
-                      dadosParaAnalise = JSON.parse(blocos);
-                    } catch(e) {
-                      return <p>Erro ao ler dados antigos.</p>;
-                    }
+                  
+                  // Força a conversão e garante que seja um objeto
+                  let data: any = blocos;
+                  if (typeof data === 'string') {
+                    try { data = JSON.parse(data); } catch(e) { data = null; }
                   }
+                  
+                  if (!data || typeof data !== 'object') return <p>Simulado realizado! Processando mapa de desempenho...</p>;
 
-                  const pioresBlocos = Object.entries(dadosParaAnalise as any)
-                    .filter(([_, dados]: [string, any]) => dados.total > 0)
-                    .map(([nome, dados]: [string, any]) => ({ nome, taxa: (dados.acertos / dados.total) * 100 }))
-                    .sort((a, b) => a.taxa - b.taxa);
+                  // Calcula o impacto real de cada bloco na nota
+                  // Pesos: CLPAP (1.0), CPJM (1.25), CLIPM (1.75), CP (2.0)
+                  const pesos: Record<string, number> = { "CLPAP": 1.0, "CPJM": 1.25, "CLIPM": 1.75, "CP": 2.0 };
                   
-                  if (pioresBlocos.length === 0) return <p>Continue fazendo simulados para gerarmos seu mapa de desempenho!</p>;
+                  const analise = Object.entries(data as any)
+                    .filter(([_, d]: [string, any]) => d.total >= 3) // Mínimo de 3 questões para ser estatisticamente relevante
+                    .map(([nome, d]: [string, any]) => ({ 
+                      nome, 
+                      taxa: (d.acertos / d.total),
+                      peso: pesos[nome] || 1.0
+                    }));
+
+                  // Identifica o bloco que, se melhorado, aumenta mais a PF (baixa taxa * alto peso)
+                  const pior = analise.sort((a, b) => (a.taxa * a.peso) - (b.taxa * b.peso))[0];
                   
-                  const pior = pioresBlocos[0];
-                  return <p>🎯 <strong>Foco Imediato:</strong> O bloco <strong>{pior.nome}</strong> está com {pior.taxa.toFixed(0)}% de aproveitamento. Dedique 70% do seu tempo hoje a ele.</p>;
+                  if (!pior) return <p>Continue fazendo simulados para gerarmos seu mapa de desempenho!</p>;
+                  
+                  return <p>🎯 <strong>Foco Imediato:</strong> O bloco <strong>{pior.nome}</strong> é sua prioridade: {Math.round(pior.taxa * 100)}% de acertos. Com peso {pior.peso}, melhorar este bloco elevará sua nota significativamente.</p>;
                 })()
               )}
             </div>
