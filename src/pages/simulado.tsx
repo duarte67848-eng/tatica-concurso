@@ -35,6 +35,7 @@ export default function Simulado({ colors }: { colors?: any }) {
   const [loading, setLoading] = useState(true);
   const [timeLeft, setTimeLeft] = useState(240 * 60);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [userName, setUserName] = useState("");
 
@@ -118,7 +119,8 @@ export default function Simulado({ colors }: { colors?: any }) {
   }
 
   async function handleSubmit() {
-    if (submitted) return;
+    if (submitted || submitting) return;
+    setSubmitting(true);
     setSubmitted(true);
 
     let acertos = 0;
