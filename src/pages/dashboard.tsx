@@ -615,8 +615,12 @@ const tendencia = evolution.length >= 2 ? (evolution[evolution.length - 1].media
                   const blocos = results[0]?.detalhes;
                   if (!blocos) return <p>Dados insuficientes para análise.</p>;
                   const pioresBlocos = Object.entries(blocos as any)
-                    .map(([nome, dados]: [string, any]) => ({ nome, taxa: dados.total > 0 ? (dados.acertos / dados.total) * 100 : 0 }))
+                    .filter(([_, dados]: [string, any]) => dados.total > 0)
+                    .map(([nome, dados]: [string, any]) => ({ nome, taxa: (dados.acertos / dados.total) * 100 }))
                     .sort((a, b) => a.taxa - b.taxa);
+                  
+                  if (pioresBlocos.length === 0) return <p>Continue fazendo simulados para gerarmos seu mapa de desempenho!</p>;
+                  
                   const pior = pioresBlocos[0];
                   return <p>🎯 <strong>Foco Imediato:</strong> O bloco <strong>{pior.nome}</strong> está com {pior.taxa.toFixed(0)}% de aproveitamento. Dedique 70% do seu tempo hoje a ele.</p>;
                 })()
