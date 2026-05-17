@@ -125,20 +125,17 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
     let exQuestions: Questao[] = [];
     
     if (mode === "livre") {
-      const validQ = getFilteredQuestions().filter(q => q.pergunta && q.pergunta.trim().length > 0 && q.alternativa_a && q.alternativa_a.trim().length > 0);
-      exQuestions = validQ.slice(0, filterQuantidade);
+      exQuestions = getFilteredQuestions().slice(0, filterQuantidade);
     } else if (mode === "inteligente") {
       exQuestions = await getInteligentQuestions();
     } else if (mode === "bloco") {
-      const validQ = questions.filter(q => q.disciplina === filterBloco && q.pergunta && q.pergunta.trim().length > 0 && q.alternativa_a && q.alternativa_a.trim().length > 0);
-      exQuestions = validQ.slice(0, filterQuantidade);
+      exQuestions = questions.filter(q => q.disciplina === filterBloco).slice(0, filterQuantidade);
     } else if (mode === "rapido") {
-      const validQ = getFilteredQuestions().filter(q => q.pergunta && q.pergunta.trim().length > 0 && q.alternativa_a && q.alternativa_a.trim().length > 0);
-      exQuestions = validQ.slice(0, filterQuantidade);
+      exQuestions = getFilteredQuestions().slice(0, filterQuantidade);
     }
     
     if (exQuestions.length === 0) {
-      alert("Nenhuma questão válida encontrada para este modo. Tente outro bloco ou adicione mais questões.");
+      alert("Nenhuma questão encontrada para este modo. Tente outro bloco.");
       return;
     }
     
