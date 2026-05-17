@@ -60,7 +60,7 @@ export default function Simulado({ colors }: { colors?: any }) {
   }, [timeLeft, submitted]);
 
   async function loadQuestions() {
-    const { data } = await supabase.from("questao").select("*").eq("tipo", "simulado").order("id", { ascending: true }).limit(80);
+    const { data } = await supabase.from("questao").select("*").eq("tipo", "simulado").neq("pergunta", "").not("pergunta", "is", null).order("id", { ascending: true }).limit(80);
     if (data) {
       setQuestions(data as any);
     } else {
