@@ -64,9 +64,6 @@ export default function Simulado({ colors }: { colors?: any }) {
     if (data) {
       const filtered = (data as any).filter((q: any) => q.pergunta && q.pergunta.trim() !== "");
       setQuestions(filtered.slice(0, 80));
-      if (filtered.length < 80) {
-        console.log("Atenção: apenas " + filtered.length + " questões válidas disponíveis");
-      }
     } else {
       setQuestions([]);
     }
@@ -188,15 +185,6 @@ export default function Simulado({ colors }: { colors?: any }) {
   }
 
   const currentQuestion = questions[currentIndex];
-  
-  // Auto-pular questões vazias
-  if (currentQuestion && (!currentQuestion.pergunta || currentQuestion.pergunta.trim() === "")) {
-    const nextValid = questions.findIndex((q, i) => i > currentIndex && q?.pergunta?.trim());
-    if (nextValid > -1) {
-      setCurrentIndex(nextValid);
-      return null;
-    }
-  }
 
   return (
     <div>
