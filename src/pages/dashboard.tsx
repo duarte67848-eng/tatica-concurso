@@ -613,7 +613,8 @@ const tendencia = evolution.length >= 2 ? (evolution[evolution.length - 1].media
               ) : (
                 (() => {
                   const blocos = results[0]?.detalhes;
-                  if (!blocos) return <p>Dados insuficientes para análise.</p>;
+                  console.log("DEBUG_BLOCOS:", blocos); // Debug
+                  if (!blocos) return <p>Dados insuficientes para análise. Detalhes: {JSON.stringify(results[0])}</p>;
                   const pioresBlocos = Object.entries(blocos as any)
                     .filter(([_, dados]: [string, any]) => dados.total > 0)
                     .map(([nome, dados]: [string, any]) => ({ nome, taxa: (dados.acertos / dados.total) * 100 }))
