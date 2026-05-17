@@ -62,8 +62,12 @@ export default function Simulado({ colors }: { colors?: any }) {
   async function loadQuestions() {
     const { data } = await supabase.from("questao").select("*").eq("tipo", "simulado").order("id", { ascending: true }).limit(150);
     if (data) {
-      const filtered = (data as any).filter((q: any) => q.pergunta && q.pergunta.trim() !== "");
-      setQuestions(filtered.slice(0, 80));
+      const validQuestions = (data as any).filter((q: any) => {
+        const hasPergunta = q.pergunta && q.pergunta.trim().length > 0;
+        const hasAlternativas = q.alternativa_a && q.alternativa_a.trim().length > 0;
+        return hasPergunta && hasAlternativas;
+      });
+      setQuestions(validQuestions.slice(0, 80));
     } else {
       setQuestions([]);
     }
