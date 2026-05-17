@@ -34,7 +34,7 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
   
   // Filters
   const [filterDisciplina, setFilterDisciplina] = useState("todas");
-  const [filterBloco, setFilterBloco] = useState("todos");
+  const [filterBloco, setFilterBloco] = useState("CLPAP");
   const [filterQuantidade, setFilterQuantidade] = useState(10);
   const [filterDificuldade, setFilterDificuldade] = useState("todas");
 
