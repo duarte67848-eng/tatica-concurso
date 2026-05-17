@@ -26,6 +26,20 @@ const HIERARQUIA = [
   { valor: "Sub Tenente", ordem: 8 },
 ];
 
+function tempoCadastro(criadoEm: string): string {
+  const created = new Date(criadoEm);
+  const now = new Date();
+  const diffMs = now.getTime() - created.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 0) return "Hoje";
+  if (diffDays === 1) return "1 dia";
+  if (diffDays < 7) return `${diffDays} dias`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} semana${Math.floor(diffDays / 7) > 1 ? 's' : ''}`;
+  if (diffDays < 365) return `${Math.floor(diffDays / 30)} mês${Math.floor(diffDays / 30) > 1 ? 'es' : ''}`;
+  return `${Math.floor(diffDays / 365)} ano${Math.floor(diffDays / 365) > 1 ? 's' : ''}`;
+}
+
 interface User {
   id: string;
   nome: string;
@@ -690,7 +704,10 @@ onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAut
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
                       <span style={{ color: "#9ca3af" }}>{u.email}</span>
-                      <span style={{ color: "#ffd700", fontSize: "0.875rem", fontWeight: "bold" }}>{u.patente || "Aluno Soldado"}</span>
+                      <span style={{ display: "flex", gap: "1rem" }}>
+                        <span style={{ color: "#3b82f6", fontSize: "0.875rem" }}>📅 {tempoCadastro(u.criado_em)}</span>
+                        <span style={{ color: "#ffd700", fontSize: "0.875rem", fontWeight: "bold" }}>{u.patente || "Aluno Soldado"}</span>
+                      </span>
                     </div>
                   <div style={{ display: "flex", gap: "0.5rem" }}>
                     {!u.aprovado && (
@@ -727,7 +744,10 @@ onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAut
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
                       <span style={{ color: "#9ca3af" }}>{u.email}</span>
-                      <span style={{ color: "#ffd700", fontSize: "0.875rem", fontWeight: "bold" }}>{u.patente || "Aluno Soldado"}</span>
+                      <span style={{ display: "flex", gap: "1rem" }}>
+                        <span style={{ color: "#3b82f6", fontSize: "0.875rem" }}>📅 {tempoCadastro(u.criado_em)}</span>
+                        <span style={{ color: "#ffd700", fontSize: "0.875rem", fontWeight: "bold" }}>{u.patente || "Aluno Soldado"}</span>
+                      </span>
                     </div>
                   <div style={{ display: "flex", gap: "0.5rem" }}>
                     <button onClick={() => unblockUser(u.id)} style={{ background: "#22c55e", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer", fontWeight: "bold" }}>
