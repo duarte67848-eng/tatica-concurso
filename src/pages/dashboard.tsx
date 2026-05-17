@@ -611,11 +611,15 @@ const tendencia = evolution.length >= 2 ? (evolution[evolution.length - 1].media
               {totalSimulados === 0 ? (
                 <p>Inicie seu primeiro simulado para receber recomendações personalizadas!</p>
               ) : (
-                <>
-                  <p>✅ <strong style={{ color: c.green }}>Pontos fortes:</strong> Continue mantendo o desempenho nos blocos que você tem bom resultado.</p>
-                  <p style={{ marginTop: "0.75rem" }}>⚠️ <strong style={{ color: c.red }}>Pontos fracos:</strong> Foque nos blocos com menor taxa de acerto para melhorar sua PF.</p>
-                  <p style={{ marginTop: "0.75rem" }}>📈 <strong style={{ color: c.blue }}>Evolução:</strong> {Number(tendencia) >= 0 ? "Você está melhorando!" : "Mantenha a frequência nos estudos."}</p>
-                </>
+                (() => {
+                  const blocos = results[0]?.detalhes;
+                  if (!blocos) return <p>Dados insuficientes para análise.</p>;
+                  const pioresBlocos = Object.entries(blocos as any)
+                    .map(([nome, dados]: [string, any]) => ({ nome, taxa: dados.total > 0 ? (dados.acertos / dados.total) * 100 : 0 }))
+                    .sort((a, b) => a.taxa - b.taxa);
+                  const pior = pioresBlocos[0];
+                  return <p>🎯 <strong>Foco Imediato:</strong> O bloco <strong>{pior.nome}</strong> está com {pior.taxa.toFixed(0)}% de aproveitamento. Dedique 70% do seu tempo hoje a ele.</p>;
+                })()
               )}
             </div>
           </div>
