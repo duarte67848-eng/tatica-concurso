@@ -16,6 +16,7 @@ interface Questao {
   resposta_correta: string;
   disciplina: string;
   peso: number;
+  tipo?: string;
 }
 
 interface BancoExerciciosProps {
@@ -125,17 +126,15 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
     let exQuestions: Questao[] = [];
     
     if (mode === "livre") {
-      exQuestions = getFilteredQuestions().filter(q => q.tipo === "exercicio" || q.tipo === "simulado").slice(0, filterQuantidade);
+      exQuestions = getFilteredQuestions().slice(0, filterQuantidade);
     } else if (mode === "inteligente") {
       exQuestions = await getInteligentQuestions();
     } else if (mode === "bloco") {
       const disciplina = filterBloco;
-      console.log("DEBUG: filterBloco =", disciplina, "Total questions =", questions.length);
       const blocoQuestions = questions.filter(q => q.disciplina === disciplina);
-      console.log("DEBUG: Encontradas =", blocoQuestions.length);
       exQuestions = blocoQuestions.slice(0, filterQuantidade);
     } else if (mode === "rapido") {
-      exQuestions = getFilteredQuestions().filter(q => q.tipo === "exercicio" || q.tipo === "simulado").slice(0, filterQuantidade);
+      exQuestions = getFilteredQuestions().slice(0, filterQuantidade);
     }
     
     if (exQuestions.length === 0) {
