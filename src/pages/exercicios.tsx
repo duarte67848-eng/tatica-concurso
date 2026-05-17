@@ -75,6 +75,7 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
 
   async function loadQuestions() {
     const { data } = await supabase.from("questao").select("*").eq("tipo", "exercicio").limit(500);
+    console.log("Exercicio questions:", data?.length);
     if (data && data.length > 0) setQuestions(data as any);
     setLoading(false);
   }
