@@ -48,6 +48,7 @@ interface User {
   aprovado: boolean;
   criado_em: string;
   patente: string;
+  direcionamento?: string;
 }
 
 interface Result {
@@ -638,7 +639,7 @@ onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAut
                       <input 
                         type="text" 
                         placeholder="Direcionamento para aluno..." 
-                        defaultValue={(u as any).direcionamento || ""}
+                        defaultValue={u.direcionamento || ""}
                         onBlur={(e) => updateDirecionamento(u.id, e.target.value)}
                         style={{ width: "100%", background: "#0d0d0d", color: "#fff", padding: "8px", border: "1px solid #333", borderRadius: "4px" }}
                       />
@@ -775,9 +776,7 @@ onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAut
                       <input 
                         type="text" 
                         placeholder="Direcionamento para aluno..." 
-                        // @ts-ignore
-                        defaultValue={(u as any).direcionamento || ""}
-                        // @ts-ignore
+                        defaultValue={u.direcionamento || ""}
                         onBlur={(e) => updateDirecionamento(u.id, e.target.value)}
                         style={{ width: "100%", background: "#0d0d0d", color: "#fff", padding: "8px", border: "1px solid #333", borderRadius: "4px" }}
                       />
