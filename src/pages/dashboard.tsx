@@ -625,6 +625,7 @@ const tendencia = evolution.length >= 2 ? (evolution[evolution.length - 1].media
         {activeTab === "ranking" && (
           <div style={{ background: c.backgroundSecondary, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "1.5rem" }}>
             <h3 style={{ color: c.gold, marginBottom: "1.5rem", fontWeight: "bold", fontSize: "1.5rem" }}>🏆 RANKING GERAL</h3>
+            <div style={{ marginBottom: "1rem", color: c.textSecondary, fontSize: "0.875rem" }}>Carregando ranking... (debug: rankingLoading={String(rankingLoading)}, ranking.length={ranking.length})</div>
             {rankingLoading ? (
               <div style={{ textAlign: "center", padding: "2rem", color: c.textSecondary }}>
                 Carregando ranking...
