@@ -185,6 +185,15 @@ export default function Simulado({ colors }: { colors?: any }) {
   }
 
   const currentQuestion = questions[currentIndex];
+  
+  // Auto-pular questões vazias
+  if (currentQuestion && (!currentQuestion.pergunta || currentQuestion.pergunta.trim() === "")) {
+    const nextValid = questions.findIndex((q, i) => i > currentIndex && q?.pergunta?.trim());
+    if (nextValid > -1) {
+      setCurrentIndex(nextValid);
+      return null;
+    }
+  }
 
   return (
     <div>
