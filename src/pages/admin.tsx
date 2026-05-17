@@ -535,28 +535,23 @@ onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAut
       </div>
 
         {/* Abas */}
-          <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem" }}>
-             <button onClick={() => setActiveTab("questions")} style={{ padding: "12px 24px", background: activeTab === 
-   "questions" ? "#ffd700" : "#1a1a1a", color: activeTab === "questions" ? "#000" : "#fff", border: "1px solid #333", 
-   borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
-               QUESTÕES ({simulationQuestions} Sim / {exerciseQuestions} Ex)
+<div style={{ display: "flex", gap: "1rem", marginBottom: "2rem", flexWrap: "wrap" }}>
+              <button onClick={() => setActiveTab("questionsSimulado")} style={{ padding: "12px 24px", background: activeTab === "questionsSimulado" ? "#ffd700" : "#1a1a1a", color: activeTab === "questionsSimulado" ? "#000" : "#fff", border: "1px solid #333", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
+                📝 SIMULADO ({simulationQuestions})
+              </button>
+              <button onClick={() => setActiveTab("questionsExercicio")} style={{ padding: "12px 24px", background: activeTab === "questionsExercicio" ? "#ffd700" : "#1a1a1a", color: activeTab === "questionsExercicio" ? "#000" : "#fff", border: "1px solid #333", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
+                📋 EXERCÍCIOS ({exerciseQuestions})
+              </button>
+             <button onClick={() => setActiveTab("users")} style={{ padding: "12px 24px", background: activeTab === "users" ? "#ffd700" : "#1a1a1a", color: activeTab === "users" ? "#000" : "#fff", border: "1px solid #333", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
+               ALUNOS ({users.length})
              </button>
-            <button onClick={() => setActiveTab("users")} style={{ padding: "12px 24px", background: activeTab === 
-  "users" ? "#ffd700" : "#1a1a1a", color: activeTab === "users" ? "#000" : "#fff", border: "1px solid #333", 
-  borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
-              ALUNOS ({users.length})
-            </button>
-            <button onClick={() => setActiveTab("pdfs")} style={{ padding: "12px 24px", background: activeTab === 
-  "pdfs" ? "#ffd700" : "#1a1a1a", color: activeTab === "pdfs" ? "#000" : "#fff", border: "1px solid #333", 
-  borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
-              BIBLIOTECA PDF ({pdfs.length})
-            </button>
-            <button onClick={() => setActiveTab("results")} style={{ padding: "12px 24px", background: activeTab === 
-  "results" ? "#ffd700" : "#1a1a1a", color: activeTab === "results" ? "#000" : "#fff", border: "1px solid #333", 
-  borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
-              RESULTADOS ({results.length})
-            </button>
-          </div>
+             <button onClick={() => setActiveTab("pdfs")} style={{ padding: "12px 24px", background: activeTab === "pdfs" ? "#ffd700" : "#1a1a1a", color: activeTab === "pdfs" ? "#000" : "#fff", border: "1px solid #333", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
+               BIBLIOTECA PDF ({pdfs.length})
+             </button>
+             <button onClick={() => setActiveTab("results")} style={{ padding: "12px 24px", background: activeTab === "results" ? "#ffd700" : "#1a1a1a", color: activeTab === "results" ? "#000" : "#fff", border: "1px solid #333", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
+               RESULTADOS ({results.length})
+             </button>
+           </div>
 
       {/* TAB QUESTÕES */}
       {activeTab === "questions" && (
@@ -687,6 +682,52 @@ onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAut
               </div>
             </div>
           )}
+
+      {/* TAB SIMULADO */}
+      {activeTab === "questionsSimulado" && (
+        <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem", marginBottom: "2rem" }}>
+          <h2 style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#ffd700", marginBottom: "1rem" }}>
+            Questões de Simulado ({simulationQuestions})
+          </h2>
+          <div style={{ marginBottom: "1rem" }}>
+            <button onClick={() => { setNewQuestion({...newQuestion, tipo: "simulado"}); setActiveTab("questions"); }} style={{ background: "#3b82f6", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+              + Adicionar Questão de Simulado
+            </button>
+          </div>
+          <div style={{ maxHeight: "400px", overflow: "auto" }}>
+            {questions.filter(q => q.tipo === "simulado").map((q) => (
+              <div key={q.id} style={{ background: "#0d0d0d", border: "1px solid #333", borderRadius: "4px", padding: "1rem", marginBottom: "0.5rem" }}>
+                <div style={{ color: "#ffd700", fontWeight: "bold", marginBottom: "0.5rem" }}>{q.disciplina} | Peso: {q.peso}</div>
+                <div style={{ color: "#fff", marginBottom: "0.5rem" }}>{q.pergunta?.substring(0, 80)}...</div>
+                <div style={{ color: "#22c55e", fontSize: "0.875rem" }}>Resp: {q.resposta_correta}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB EXERCICIO */}
+      {activeTab === "questionsExercicio" && (
+        <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem", marginBottom: "2rem" }}>
+          <h2 style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#ffd700", marginBottom: "1rem" }}>
+            Questões de Exercício ({exerciseQuestions})
+          </h2>
+          <div style={{ marginBottom: "1rem" }}>
+            <button onClick={() => { setNewQuestion({...newQuestion, tipo: "exercicio"}); setActiveTab("questions"); }} style={{ background: "#3b82f6", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+              + Adicionar Questão de Exercício
+            </button>
+          </div>
+          <div style={{ maxHeight: "400px", overflow: "auto" }}>
+            {questions.filter(q => q.tipo === "exercicio").map((q) => (
+              <div key={q.id} style={{ background: "#0d0d0d", border: "1px solid #333", borderRadius: "4px", padding: "1rem", marginBottom: "0.5rem" }}>
+                <div style={{ color: "#ffd700", fontWeight: "bold", marginBottom: "0.5rem" }}>{q.disciplina} | Peso: {q.peso}</div>
+                <div style={{ color: "#fff", marginBottom: "0.5rem" }}>{q.pergunta?.substring(0, 80)}...</div>
+                <div style={{ color: "#22c55e", fontSize: "0.875rem" }}>Resp: {q.resposta_correta}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
           <h2 style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#ffd700", marginBottom: "1rem" }}>
             Alunos ({users.length})
