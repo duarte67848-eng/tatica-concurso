@@ -249,21 +249,6 @@ export default function Simulado({ colors }: { colors?: any }) {
           ← ANTERIOR
         </button>
 
-        {currentIndex === questions.length - 1 ? (
-          <button
-            onClick={handleSubmit}
-            style={{ background: `linear-gradient(180deg, ${c.gold} 0%, ${c.goldHover} 100%)`, color: "#000", fontWeight: "bold", padding: "12px 24px", borderRadius: "4px", border: "none", cursor: "pointer", textTransform: "uppercase", letterSpacing: "1px" }}
-          >
-            FINALIZAR SIMULADO
-          </button>
-        ) : (
-<button 
-          disabled={currentIndex === 0}
-          style={{ padding: "12px 24px", border: `1px solid ${c.border}`, color: c.textSecondary, borderRadius: "4px", background: "transparent", cursor: currentIndex === 0 ? "not-allowed" : "pointer", opacity: currentIndex === 0 ? 0.5 : 1 }}
-        >
-          ← ANTERIOR
-        </button>
-
         {currentIndex >= questions.length - 1 ? (
           <button
             onClick={handleSubmit}
