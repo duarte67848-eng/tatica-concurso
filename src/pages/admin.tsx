@@ -88,6 +88,12 @@ export default function Admin() {
   const [blockedUsers, setBlockedUsers] = useState<User[]>([]);
   const [results, setResults] = useState<Result[]>([]);
   type TabType = "questions" | "users" | "results" | "pdfs" | "questionsSimulado" | "questionsExercicio";
+  const updateDirecionamento = async (userId: string, text: string) => {
+    await supabase.from("usuario").update({ direcionamento: text }).eq("id", userId);
+    alert("Direcionamento salvo!");
+    loadData();
+  };
+
   const [activeTab, setActiveTab] = useState<TabType>("questionsSimulado");
 
   function showTab(tab: TabType): boolean {
@@ -628,7 +634,16 @@ onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAut
                   <p style={{ marginBottom: "0.5rem" }}>{q.pergunta.substring(0, 80)}...</p>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span style={{ color: "#22c55e", fontWeight: "bold" }}>Resp: {q.resposta_correta}</span>
-                    <div style={{ display: "flex", gap: "0.5rem" }}>
+                    <div style={{ marginTop: "1rem" }}>
+                      <input 
+                        type="text" 
+                        placeholder="Direcionamento para aluno..." 
+                        defaultValue={(u as any).direcionamento || ""}
+                        onBlur={(e) => updateDirecionamento(u.id, e.target.value)}
+                        style={{ width: "100%", background: "#0d0d0d", color: "#fff", padding: "8px", border: "1px solid #333", borderRadius: "4px" }}
+                      />
+                    </div>
+                  <div style={{ display: "flex", gap: "0.5rem", marginTop: "1rem" }}>
                       <button onClick={() => setEditingQuestion(q)} style={{ background: "#3b82f6", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
                         Editar
                       </button>
@@ -756,18 +771,23 @@ onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAut
                         <span style={{ color: "#ffd700", fontSize: "0.875rem", fontWeight: "bold" }}>{u.patente || "Aluno Soldado"}</span>
                       </span>
                     </div>
-                  <div style={{ display: "flex", gap: "0.5rem" }}>
+                    <div style={{ marginTop: "1rem" }}>
+                      <input 
+                        type="text" 
+                        placeholder="Direcionamento para aluno..." 
+                        // @ts-ignore
+                        defaultValue={(u as any).direcionamento || ""}
+                        // @ts-ignore
+                        onBlur={(e) => updateDirecionamento(u.id, e.target.value)}
+                        style={{ width: "100%", background: "#0d0d0d", color: "#fff", padding: "8px", border: "1px solid #333", borderRadius: "4px" }}
+                      />
+                    </div>
+                  <div style={{ display: "flex", gap: "0.5rem", marginTop: "1rem" }}>
                     {!u.aprovado && (
                       <button onClick={() => approveUser(u.id)} style={{ background: "#22c55e", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
                         AUTORIZAR
                       </button>
                     )}
-                    <button onClick={() => blockUser(u.id)} style={{ background: "#f59e0b", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
-                      BLOQUEAR
-                    </button>
-                    <button onClick={() => deleteUser(u.id)} style={{ background: "#ef4444", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
-                      EXCLUIR
-                    </button>
                   </div>
                 </div>
               ))

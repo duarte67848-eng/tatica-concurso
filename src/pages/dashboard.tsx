@@ -605,6 +605,13 @@ const tendencia = evolution.length >= 2 ? (evolution[evolution.length - 1].media
             </div>
           </div>
 
+          <div style={{ background: c.backgroundSecondary, border: `1px solid ${c.gold}`, borderRadius: "8px", padding: "1.5rem", marginBottom: "2rem" }}>
+            <h3 style={{ color: c.gold, marginBottom: "1rem" }}>Direcionamento do Instrutor</h3>
+            <div style={{ color: c.text, lineHeight: "1.6", fontWeight: "bold" }}>
+              {user.direcionamento || "Nenhum direcionamento no momento."}
+            </div>
+          </div>
+
           <div style={{ background: c.backgroundSecondary, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "1.5rem" }}>
             <h3 style={{ color: c.gold, marginBottom: "1rem" }}>Recomendação Estratégica</h3>
             <div style={{ color: c.text, lineHeight: "1.6" }}>
