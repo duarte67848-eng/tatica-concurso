@@ -55,6 +55,7 @@ export default function Dashboard({ colors }: DashboardProps) {
   const [loading, setLoading] = useState(true);
   const [results, setResults] = useState<Result[]>([]);
   const [activeTab, setActiveTab] = useState<"resumo" | "estatisticas" | "historico" | "analise">("resumo");
+  const [ranking, setRanking] = useState<any[]>([]);
 
   const c = colors || {
     background: "#0d0d0d",
@@ -79,6 +80,7 @@ export default function Dashboard({ colors }: DashboardProps) {
       const userObj = JSON.parse(userData);
       setUser(userObj);
       loadResults(userObj.email);
+      loadRanking();
     }
   }, [router]);
 
@@ -91,6 +93,37 @@ export default function Dashboard({ colors }: DashboardProps) {
     
     if (data) setResults(data as any);
     setLoading(false);
+  }
+
+  async function loadRanking() {
+    const { data } = await supabase
+      .from("resultado")
+      .select("email_usuario, nome_usuario, pf, created_at")
+      .order("pf", { ascending: false });
+    
+    if (data) {
+      const rankingMap = new Map();
+      data.forEach((r: any) => {
+        if (!rankingMap.has(r.email_usuario)) {
+          rankingMap.set(r.email_usuario, { 
+            email: r.email_usuario, 
+            nome: r.nome_usuario, 
+            melhorPF: r.pf, 
+            simulados: 1 
+          });
+        } else {
+          const existing = rankingMap.get(r.email_usuario);
+          if (r.pf > existing.melhorPF) existing.melhorPF = r.pf;
+          existing.simulados++;
+        }
+      });
+      
+      const rankingArray = Array.from(rankingMap.values())
+        .sort((a: any, b: any) => b.melhorPF - a.melhorPF)
+        .slice(0, 20);
+      
+      setRanking(rankingArray);
+    }
   }
 
   function handleLogout() {
@@ -282,6 +315,43 @@ export default function Dashboard({ colors }: DashboardProps) {
             <Card title="ACERTOS" value={totalAcertos} subtitle={`${percentualGeral.toFixed(1)}% geral`} color={c.green} />
             <Card title="ERROS" value={totalErros} subtitle="Para revisar" color={c.red} />
           </div>
+
+          {/* RANKING GERAL */}
+          {ranking.length > 0 && (
+            <div style={{ background: c.backgroundSecondary, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "1.5rem", marginBottom: "1.5rem" }}>
+              <h3 style={{ color: c.gold, marginBottom: "1rem", fontWeight: "bold", fontSize: "1.25rem" }}>🏆 RANKING GERAL</h3>
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ borderBottom: `1px solid ${c.border}` }}>
+                      <th style={{ padding: "8px", textAlign: "left", color: c.textSecondary }}>#</th>
+                      <th style={{ padding: "8px", textAlign: "left", color: c.textSecondary }}>Aluno</th>
+                      <th style={{ padding: "8px", textAlign: "center", color: c.textSecondary }}>Melhor PF</th>
+                      <th style={{ padding: "8px", textAlign: "center", color: c.textSecondary }}>Simulados</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ranking.map((r, idx) => (
+                      <tr key={r.email} style={{ borderBottom: `1px solid ${c.border}`, background: r.email === user?.email ? `${c.gold}20` : "transparent" }}>
+                        <td style={{ padding: "8px" }}>
+                          {idx === 0 && <span style={{ fontSize: "1.5rem" }}>🥇</span>}
+                          {idx === 1 && <span style={{ fontSize: "1.5rem" }}>🥈</span>}
+                          {idx === 2 && <span style={{ fontSize: "1.5rem" }}>🥉</span>}
+                          {idx > 2 && <span style={{ color: c.textSecondary }}>{idx + 1}º</span>}
+                        </td>
+                        <td style={{ padding: "8px", color: c.text, fontWeight: r.email === user?.email ? "bold" : "normal" }}>
+                          {r.nome || r.email}
+                          {r.email === user?.email && <span style={{ color: c.gold, marginLeft: "8px" }}>(Você)</span>}
+                        </td>
+                        <td style={{ padding: "8px", textAlign: "center", color: c.gold, fontWeight: "bold" }}>{r.melhorPF.toFixed(2)}</td>
+                        <td style={{ padding: "8px", textAlign: "center", color: c.textSecondary }}>{r.simulados}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.5rem", marginBottom: "1.5rem" }}>
             <div style={{ background: c.backgroundSecondary, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "1.5rem" }}>
