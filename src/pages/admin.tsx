@@ -89,9 +89,10 @@ export default function Admin() {
   const [results, setResults] = useState<Result[]>([]);
   type TabType = "questions" | "users" | "results" | "pdfs" | "questionsSimulado" | "questionsExercicio";
   const [activeTab, setActiveTab] = useState<TabType>("questionsSimulado");
-  const isQuestionsSimulado = (activeTab as string) === "questionsSimulado";
-  const isQuestionsExercicio = (activeTab as string) === "questionsExercicio";
-  const isQuestions = (activeTab as string) === "questions";
+
+  function showTab(tab: TabType): boolean {
+    return activeTab === tab;
+  }
   const [loading, setLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
@@ -540,10 +541,10 @@ onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAut
 
         {/* Abas */}
 <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem", flexWrap: "wrap" }}>
-              <button onClick={() => setActiveTab("questionsSimulado" as TabType)} style={{ padding: "12px 24px", background: isQuestionsSimulado ? "#ffd700" : "#1a1a1a", color: isQuestionsSimulado ? "#000" : "#fff", border: "1px solid #333", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
+              <button onClick={() => setActiveTab("questionsSimulado" as TabType)} style={{ padding: "12px 24px", background: showTab("questionsSimulado") ? "#ffd700" : "#1a1a1a", color: showTab("questionsSimulado") ? "#000" : "#fff", border: "1px solid #333", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
                 📝 SIMULADO ({simulationQuestions})
               </button>
-              <button onClick={() => setActiveTab("questionsExercicio" as TabType)} style={{ padding: "12px 24px", background: isQuestionsExercicio ? "#ffd700" : "#1a1a1a", color: isQuestionsExercicio ? "#000" : "#fff", border: "1px solid #333", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
+              <button onClick={() => setActiveTab("questionsExercicio" as TabType)} style={{ padding: "12px 24px", background: showTab("questionsExercicio") ? "#ffd700" : "#1a1a1a", color: showTab("questionsExercicio") ? "#000" : "#fff", border: "1px solid #333", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
                 📋 EXERCÍCIOS ({exerciseQuestions})
               </button>
 <button onClick={() => setActiveTab("users" as TabType)} style={{ padding: "12px 24px", background: activeTab === "users" ? "#ffd700" : "#1a1a1a", color: activeTab === "users" ? "#000" : "#fff", border: "1px solid #333", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
@@ -558,7 +559,7 @@ onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAut
            </div>
 
       {/* TAB QUESTÕES */}
-      {isQuestions && (
+      {showTab("questions") && (
         <>
           <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem", marginBottom: "2rem" }}>
             <h2 style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#ffd700", marginBottom: "1rem" }}>
@@ -688,7 +689,7 @@ onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAut
           )}
 
       {/* TAB SIMULADO */}
-      {isQuestionsSimulado && (
+      {showTab("questionsSimulado") && (
         <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem", marginBottom: "2rem" }}>
           <h2 style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#ffd700", marginBottom: "1rem" }}>
             Questões de Simulado ({simulationQuestions})
@@ -711,7 +712,7 @@ onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAut
       )}
 
       {/* TAB EXERCICIO */}
-      {isQuestionsExercicio && (
+      {showTab("questionsExercicio") && (
         <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem", marginBottom: "2rem" }}>
           <h2 style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#ffd700", marginBottom: "1rem" }}>
             Questões de Exercício ({exerciseQuestions})
