@@ -401,7 +401,7 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
              <div style={{ display: "flex", alignItems: "center" }}>
                <span style={{ color: c.gold, fontWeight: "bold" }}>{currentQuestion.disciplina}</span>
                <span style={{ color: c.textSecondary, marginLeft: "1rem" }}>
-                 Questão {currentIndex + 1} de {exQuestions.length}
+                 Questão {currentIndex + 1} de {questions.length}
                </span>
              </div>
             <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>

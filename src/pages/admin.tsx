@@ -87,7 +87,11 @@ export default function Admin() {
   const [users, setUsers] = useState<User[]>([]);
   const [blockedUsers, setBlockedUsers] = useState<User[]>([]);
   const [results, setResults] = useState<Result[]>([]);
-  const [activeTab, setActiveTab] = useState<"questions" | "users" | "results" | "pdfs" | "questionsSimulado" | "questionsExercicio">("questionsSimulado");
+  type TabType = "questions" | "users" | "results" | "pdfs" | "questionsSimulado" | "questionsExercicio";
+  const [activeTab, setActiveTab] = useState<TabType>("questionsSimulado");
+  const isQuestionsSimulado = (activeTab as string) === "questionsSimulado";
+  const isQuestionsExercicio = (activeTab as string) === "questionsExercicio";
+  const isQuestions = (activeTab as string) === "questions";
   const [loading, setLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
@@ -554,7 +558,7 @@ onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAut
            </div>
 
       {/* TAB QUESTÕES */}
-      {activeTab === "questions" && (
+      {isQuestions && (
         <>
           <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem", marginBottom: "2rem" }}>
             <h2 style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#ffd700", marginBottom: "1rem" }}>
@@ -684,7 +688,7 @@ onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAut
           )}
 
       {/* TAB SIMULADO */}
-      {activeTab === "questionsSimulado" && (
+      {isQuestionsSimulado && (
         <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem", marginBottom: "2rem" }}>
           <h2 style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#ffd700", marginBottom: "1rem" }}>
             Questões de Simulado ({simulationQuestions})
@@ -707,7 +711,7 @@ onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAut
       )}
 
       {/* TAB EXERCICIO */}
-      {activeTab === "questionsExercicio" && (
+      {isQuestionsExercicio && (
         <div style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem", marginBottom: "2rem" }}>
           <h2 style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#ffd700", marginBottom: "1rem" }}>
             Questões de Exercício ({exerciseQuestions})
