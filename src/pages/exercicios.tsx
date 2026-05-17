@@ -131,7 +131,10 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
       exQuestions = await getInteligentQuestions();
     } else if (mode === "bloco") {
       const disciplina = filterBloco;
+      console.log("Questions no state:", questions.length);
+      console.log("Disciplinas disponíveis:", [...new Set(questions.map(q => q.disciplina))]);
       const blocoQuestions = questions.filter(q => q.disciplina === disciplina);
+      console.log("Encontradas para", disciplina, ":", blocoQuestions.length);
       exQuestions = blocoQuestions.slice(0, filterQuantidade);
     } else if (mode === "rapido") {
       exQuestions = getFilteredQuestions().slice(0, filterQuantidade);
