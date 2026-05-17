@@ -76,7 +76,12 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
   async function loadQuestions() {
     const { data } = await supabase.from("questao").select("*").eq("tipo", "exercicio").limit(500);
     console.log("Exercicio questions:", data?.length);
-    if (data && data.length > 0) setQuestions(data as any);
+    if (data && data.length > 0) {
+      const counts = { CLPAP: 0, CPJM: 0, CLIPM: 0, CP: 0 };
+      data.forEach((q: any) => { if (counts[q.disciplina as keyof typeof counts] !== undefined) counts[q.disciplina as keyof typeof counts]++ });
+      console.log("Disciplinas:", counts);
+      setQuestions(data as any);
+    }
     setLoading(false);
   }
 
