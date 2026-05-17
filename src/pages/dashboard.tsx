@@ -189,27 +189,8 @@ export default function Dashboard({ colors }: DashboardProps) {
     return evolution;
   };
 
-  const evolution = getEvolutionData();
-  const tendencia = evolution.length >= 2 ? (evolution[evolution.length - 1].media - evolution[0].media).toFixed(2) : "0.00";
-
-  const getRanking = async () => {
-    const { data } = await supabase
-      .from("resultado")
-      .select("email_usuario, pf")
-      .order("pf", { ascending: false })
-      .limit(50);
-    
-    if (data) {
-      const myRank = data.findIndex((r: any) => r.email_usuario === user?.email);
-      return myRank >= 0 ? myRank + 1 : null;
-    }
-    return null;
-  };
-
-  const [ranking, setRanking] = useState<number | null>(null);
-  useEffect(() => {
-    getRanking().then(setRanking);
-  }, [results]);
+const evolution = getEvolutionData();
+const tendencia = evolution.length >= 2 ? (evolution[evolution.length - 1].media - evolution[0].media).toFixed(2) : "0.00";
 
   const getRadarData = () => {
     return [
