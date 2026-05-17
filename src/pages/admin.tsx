@@ -540,20 +540,20 @@ onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAut
 
         {/* Abas */}
 <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem", flexWrap: "wrap" }}>
-              <button onClick={() => setActiveTab("questionsSimulado")} style={{ padding: "12px 24px", background: activeTab === "questionsSimulado" ? "#ffd700" : "#1a1a1a", color: activeTab === "questionsSimulado" ? "#000" : "#fff", border: "1px solid #333", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
+              <button onClick={() => setActiveTab("questionsSimulado" as TabType)} style={{ padding: "12px 24px", background: isQuestionsSimulado ? "#ffd700" : "#1a1a1a", color: isQuestionsSimulado ? "#000" : "#fff", border: "1px solid #333", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
                 📝 SIMULADO ({simulationQuestions})
               </button>
-              <button onClick={() => setActiveTab("questionsExercicio")} style={{ padding: "12px 24px", background: activeTab === "questionsExercicio" ? "#ffd700" : "#1a1a1a", color: activeTab === "questionsExercicio" ? "#000" : "#fff", border: "1px solid #333", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
+              <button onClick={() => setActiveTab("questionsExercicio" as TabType)} style={{ padding: "12px 24px", background: isQuestionsExercicio ? "#ffd700" : "#1a1a1a", color: isQuestionsExercicio ? "#000" : "#fff", border: "1px solid #333", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
                 📋 EXERCÍCIOS ({exerciseQuestions})
               </button>
-             <button onClick={() => setActiveTab("users")} style={{ padding: "12px 24px", background: activeTab === "users" ? "#ffd700" : "#1a1a1a", color: activeTab === "users" ? "#000" : "#fff", border: "1px solid #333", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
-               ALUNOS ({users.length})
-             </button>
-             <button onClick={() => setActiveTab("pdfs")} style={{ padding: "12px 24px", background: activeTab === "pdfs" ? "#ffd700" : "#1a1a1a", color: activeTab === "pdfs" ? "#000" : "#fff", border: "1px solid #333", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
-               BIBLIOTECA PDF ({pdfs.length})
-             </button>
-             <button onClick={() => setActiveTab("results")} style={{ padding: "12px 24px", background: activeTab === "results" ? "#ffd700" : "#1a1a1a", color: activeTab === "results" ? "#000" : "#fff", border: "1px solid #333", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
-               RESULTADOS ({results.length})
+<button onClick={() => setActiveTab("users" as TabType)} style={{ padding: "12px 24px", background: activeTab === "users" ? "#ffd700" : "#1a1a1a", color: activeTab === "users" ? "#000" : "#fff", border: "1px solid #333", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
+                ALUNOS ({users.length})
+              </button>
+              <button onClick={() => setActiveTab("pdfs" as TabType)} style={{ padding: "12px 24px", background: activeTab === "pdfs" ? "#ffd700" : "#1a1a1a", color: activeTab === "pdfs" ? "#000" : "#fff", border: "1px solid #333", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
+                BIBLIOTECA PDF ({pdfs.length})
+              </button>
+              <button onClick={() => setActiveTab("results" as TabType)} style={{ padding: "12px 24px", background: activeTab === "results" ? "#ffd700" : "#1a1a1a", color: activeTab === "results" ? "#000" : "#fff", border: "1px solid #333", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
+                RESULTADOS ({results.length})
              </button>
            </div>
 
@@ -694,7 +694,7 @@ onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAut
             Questões de Simulado ({simulationQuestions})
           </h2>
           <div style={{ marginBottom: "1rem" }}>
-            <button onClick={() => { setNewQuestion({...newQuestion, tipo: "simulado"}); setActiveTab("questions"); }} style={{ background: "#3b82f6", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+            <button onClick={() => { setNewQuestion({...newQuestion, tipo: "simulado"}); setActiveTab("questions" as TabType); }} style={{ background: "#3b82f6", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
               + Adicionar Questão de Simulado
             </button>
           </div>
@@ -717,7 +717,7 @@ onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAut
             Questões de Exercício ({exerciseQuestions})
           </h2>
           <div style={{ marginBottom: "1rem" }}>
-            <button onClick={() => { setNewQuestion({...newQuestion, tipo: "exercicio"}); setActiveTab("questions"); }} style={{ background: "#3b82f6", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+            <button onClick={() => { setNewQuestion({...newQuestion, tipo: "exercicio"}); setActiveTab("questions" as TabType); }} style={{ background: "#3b82f6", color: "#fff", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
               + Adicionar Questão de Exercício
             </button>
           </div>
