@@ -784,6 +784,9 @@ onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAut
                   <p style={{ marginBottom: "0.5rem", color: "#9ca3af" }}>
                     Acertos: {r.acertos} | Erros: {r.erros} | Questões: {r.total_questoes}
                   </p>
+                  <p style={{ marginBottom: "0.5rem", color: "#3b82f6", fontSize: "0.875rem" }}>
+                    📅 {r.criado_em ? new Date(r.criado_em).toLocaleString('pt-BR', { timeZone: 'America/Cuiaba' }) : 'Sem data'}
+                  </p>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <button 
                       onClick={() => setExpandedResult(expandedResult === r.id ? null : r.id)}
