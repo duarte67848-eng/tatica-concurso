@@ -130,14 +130,17 @@ export default function Simulado({ colors }: { colors?: any }) {
 
     const pf = ((clpapScore * 1) + (cpfjmScore * 1.25) + (clipmScore * 1.75) + (cpScore * 2)) / 12;
 
-    // Salvar resultado detalhado no Supabase
-    const detalhes = questions.map(q => ({
-      questao_id: q.id,
-      disciplina: q.disciplina,
-      resposta_usuario: answers[q.id] || "NÃO RESPONDIDA",
-      resposta_correta: q.resposta_correta,
-      acertou: answers[q.id] === q.resposta_correta
-    }));
+    // Calcular detalhes por disciplina
+    const resumoDisciplinas: Record<string, { acertos: number, total: number }> = {};
+    questions.forEach(q => {
+      if (!resumoDisciplinas[q.disciplina]) {
+        resumoDisciplinas[q.disciplina] = { acertos: 0, total: 0 };
+      }
+      resumoDisciplinas[q.disciplina].total++;
+      if (answers[q.id] === q.resposta_correta) {
+        resumoDisciplinas[q.disciplina].acertos++;
+      }
+    });
 
     await supabase.from("resultado").insert([{
       email_usuario: userEmail,
@@ -146,7 +149,7 @@ export default function Simulado({ colors }: { colors?: any }) {
       erros,
       pf,
       total_questoes: questions.length,
-      detalhes: JSON.stringify(detalhes),
+      detalhes: resumoDisciplinas, // Agora enviamos o objeto
       criado_em: new Date().toISOString()
     }]);
 
