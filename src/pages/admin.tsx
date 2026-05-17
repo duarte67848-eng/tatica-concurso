@@ -89,7 +89,7 @@ export default function Admin() {
   const [users, setUsers] = useState<User[]>([]);
   const [blockedUsers, setBlockedUsers] = useState<User[]>([]);
   const [results, setResults] = useState<Result[]>([]);
-  type TabType = "questions" | "users" | "results" | "pdfs" | "questionsSimulado" | "questionsExercicio";
+  type TabType = "questions" | "users" | "results" | "pdfs" | "questionsSimulado" | "questionsExercicio" | "relatorio";
   const updateDirecionamento = async (userId: string, text: string) => {
     await supabase.from("usuario").update({ direcionamento: text }).eq("id", userId);
     alert("Direcionamento salvo!");
@@ -561,9 +561,12 @@ onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAut
               <button onClick={() => setActiveTab("pdfs" as TabType)} style={{ padding: "12px 24px", background: activeTab === "pdfs" ? "#ffd700" : "#1a1a1a", color: activeTab === "pdfs" ? "#000" : "#fff", border: "1px solid #333", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
                 BIBLIOTECA PDF ({pdfs.length})
               </button>
-              <button onClick={() => setActiveTab("results" as TabType)} style={{ padding: "12px 24px", background: activeTab === "results" ? "#ffd700" : "#1a1a1a", color: activeTab === "results" ? "#000" : "#fff", border: "1px solid #333", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
+<button onClick={() => setActiveTab("results" as TabType)} style={{ padding: "12px 24px", background: activeTab === "results" ? "#ffd700" : "#1a1a1a", color: activeTab === "results" ? "#000" : "#fff", border: "1px solid #333", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
                 RESULTADOS ({results.length})
-             </button>
+              </button>
+              <button onClick={() => setActiveTab("relatorio" as TabType)} style={{ padding: "12px 24px", background: activeTab === "relatorio" ? "#ffd700" : "#1a1a1a", color: activeTab === "relatorio" ? "#000" : "#fff", border: "1px solid #333", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
+                📊 RELATÓRIO DE COMANDO
+              </button>
            </div>
 
       {/* TAB QUESTÕES */}
@@ -937,6 +940,121 @@ onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAut
                   )}
                 </div>
               ))
+            )}
+          </div>
+        </>
+      )}
+
+      {/* TAB RELATÓRIO DE COMANDO */}
+      {activeTab === "relatorio" && (
+        <>
+          <h2 style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#ffd700", marginBottom: "1rem" }}>
+            📊 RELATÓRIO DE COMANDO - DESEMPENHO POR ALUNO
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+            {users.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "2rem", color: "#9ca3af" }}>Nenhum aluno cadastrado</div>
+            ) : (
+              users.map((user) => {
+                const userResults = results.filter(r => r.email_usuario === user.email).sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime());
+                const last3 = userResults.slice(0, 3);
+                const pfValues = last3.map(r => r.pf);
+                const pfTrend = pfValues.length >= 2 ? pfValues[0] - pfValues[pfValues.length - 1] : 0;
+                
+                // Calcula peso perdido (erros em questões de alto peso)
+                let pesoPerdido = 0;
+                let totalQuestoesAltoPeso = 0;
+                let errosAltoPeso = 0;
+                
+                userResults.forEach(r => {
+                  try {
+                    const detalhes = typeof r.detalhes === 'string' ? JSON.parse(r.detalhes) : r.detalhes;
+                    if (Array.isArray(detalhes)) {
+                      detalhes.forEach((d: any) => {
+                        const peso = d.disciplina === "CP" ? 2.0 : d.disciplina === "CLIPM" ? 1.75 : d.disciplina === "CPJM" ? 1.25 : 1.0;
+                        if (peso >= 1.75) {
+                          totalQuestoesAltoPeso++;
+                          if (!d.acertou) errosAltoPeso++;
+                          pesoPerdido += !d.acertou ? peso : 0;
+                        }
+                      });
+                    }
+                  } catch(e) {}
+                });
+
+                // Identifica vícios (disciplinas com mais erros)
+                const errosPorDisciplina: Record<string, number> = {};
+                userResults.forEach(r => {
+                  try {
+                    const detalhes = typeof r.detalhes === 'string' ? JSON.parse(r.detalhes) : r.detalhes;
+                    if (Array.isArray(detalhes)) {
+                      detalhes.forEach((d: any) => {
+                        if (!d.acertou) errosPorDisciplina[d.disciplina] = (errosPorDisciplina[d.disciplina] || 0) + 1;
+                      });
+                    }
+                  } catch(e) {}
+                });
+                const vicios = Object.entries(errosPorDisciplina).sort((a, b) => b[1] - a[1]).slice(0, 3);
+
+                return (
+                  <div key={user.id} style={{ background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "1rem" }}>
+                      <div>
+                        <span style={{ color: "#fff", fontWeight: "bold", fontSize: "1.25rem" }}>{user.nome}</span>
+                        <span style={{ color: "#9ca3af", marginLeft: "1rem", fontSize: "0.875rem" }}>{user.email}</span>
+                      </div>
+                      <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+                        <span style={{ color: "#ffd700", fontWeight: "bold" }}>PF Atual: {pfValues[0]?.toFixed(2) || "N/A"}</span>
+                        <span style={{ color: pfTrend >= 0 ? "#22c55e" : "#ef4444", fontWeight: "bold" }}>
+                          {pfTrend >= 0 ? "▲" : "▼"} {Math.abs(pfTrend).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem", marginBottom: "1rem" }}>
+                      <div style={{ background: "#0d0d0d", padding: "1rem", borderRadius: "4px", textAlign: "center" }}>
+                        <div style={{ color: "#9ca3af", fontSize: "0.75rem" }}>SIMULADOS REALIZADOS</div>
+                        <div style={{ color: "#3b82f6", fontSize: "1.5rem", fontWeight: "bold" }}>{userResults.length}</div>
+                      </div>
+                      <div style={{ background: "#0d0d0d", padding: "1rem", borderRadius: "4px", textAlign: "center" }}>
+                        <div style={{ color: "#9ca3af", fontSize: "0.75rem" }}>PESO PERDIDO (CP+CLIPM)</div>
+                        <div style={{ color: "#ef4444", fontSize: "1.5rem", fontWeight: "bold" }}>{pesoPerdido.toFixed(1)}</div>
+                      </div>
+                      <div style={{ background: "#0d0d0d", padding: "1rem", borderRadius: "4px", textAlign: "center" }}>
+                        <div style={{ color: "#9ca3af", fontSize: "0.75rem" }}>ERROS ALTO PESO</div>
+                        <div style={{ color: "#ef4444", fontSize: "1.5rem", fontWeight: "bold" }}>{errosAltoPeso}</div>
+                      </div>
+                    </div>
+
+                    {vicios.length > 0 && (
+                      <div style={{ background: "#0d0d0d", padding: "1rem", borderRadius: "4px", marginBottom: "1rem" }}>
+                        <div style={{ color: "#ef4444", fontWeight: "bold", marginBottom: "0.5rem" }}>⚠️ PONTOS DE CEGUEIRA (Mais Erros)</div>
+                        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                          {vicios.map(([disc, count]) => (
+                            <span key={disc} style={{ background: "#1a1a1a", color: "#fff", padding: "4px 12px", borderRadius: "12px", fontSize: "0.875rem" }}>
+                              {disc}: {count} erros
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {last3.length > 0 && (
+                      <div style={{ background: "#0d0d0d", padding: "1rem", borderRadius: "4px" }}>
+                        <div style={{ color: "#9ca3af", fontWeight: "bold", marginBottom: "0.5rem" }}>📈 EVOLUÇÃO (Últimos 3)</div>
+                        <div style={{ display: "flex", gap: "1rem" }}>
+                          {last3.map((r, idx) => (
+                            <div key={idx} style={{ textAlign: "center" }}>
+                              <div style={{ color: "#ffd700", fontWeight: "bold" }}>{r.pf.toFixed(2)}</div>
+                              <div style={{ color: "#6b7280", fontSize: "0.75rem" }}>#{idx + 1}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
             )}
           </div>
         </>
