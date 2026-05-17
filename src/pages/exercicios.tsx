@@ -137,6 +137,11 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
       exQuestions = validQ.slice(0, filterQuantidade);
     }
     
+    if (exQuestions.length === 0) {
+      alert("Nenhuma questão válida encontrada para este modo. Tente outro bloco ou adicione mais questões.");
+      return;
+    }
+    
     // Shuffle
     exQuestions = exQuestions.sort(() => Math.random() - 0.5);
     
