@@ -10,6 +10,7 @@ interface GeradorIAProps {
 export default function GeradorIA({ colors: c }: GeradorIAProps) {
   const [textoEntrada, setTextoEntrada] = useState("");
   const [disciplinaDefault, setDisciplinaDefault] = useState("CLPAP");
+  const [tipoDefault, setTipoDefault] = useState("exercicio");
   const [loading, setLoading] = useState(false);
   const [mensagem, setMensagem] = useState("");
   const [questoesSalvas, setQuestoesSalvas] = useState(0);
@@ -70,7 +71,8 @@ export default function GeradorIA({ colors: c }: GeradorIAProps) {
           explicacao: '',
           disciplina: disciplinaDefault,
           assunto: '',
-          peso: 1.0
+          peso: 1.0,
+          tipo: tipoDefault
         });
       }
     }
@@ -121,27 +123,49 @@ export default function GeradorIA({ colors: c }: GeradorIAProps) {
         📝 Adicionar Questões em Lote
       </h2>
       
-      <div style={{ marginBottom: '1rem' }}>
-        <label style={{ display: 'block', color: c.textSecondary, marginBottom: '0.5rem', fontSize: '0.875rem' }}>
-          📚 Disciplina padrão para todas as questões
-        </label>
-        <select
-          value={disciplinaDefault}
-          onChange={(e) => setDisciplinaDefault(e.target.value)}
-          style={{
-            width: '200px',
-            padding: '0.75rem',
-            background: c.background,
-            border: `1px solid ${c.border}`,
-            borderRadius: '4px',
-            color: c.text
-          }}
-        >
-          <option value="CLPAP">CLPAP</option>
-          <option value="CPJM">CPJM</option>
-          <option value="CLIPM">CLIPM</option>
-          <option value="CP">CP</option>
-        </select>
+      <div style={{ marginBottom: '1rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+        <div>
+          <label style={{ display: 'block', color: c.textSecondary, marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+            📚 Disciplina
+          </label>
+          <select
+            value={disciplinaDefault}
+            onChange={(e) => setDisciplinaDefault(e.target.value)}
+            style={{
+              width: '120px',
+              padding: '0.75rem',
+              background: c.background,
+              border: `1px solid ${c.border}`,
+              borderRadius: '4px',
+              color: c.text
+            }}
+          >
+            <option value="CLPAP">CLPAP</option>
+            <option value="CPJM">CPJM</option>
+            <option value="CLIPM">CLIPM</option>
+            <option value="CP">CP</option>
+          </select>
+        </div>
+        <div>
+          <label style={{ display: 'block', color: c.textSecondary, marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+            📋 Tipo
+          </label>
+          <select
+            value={tipoDefault}
+            onChange={(e) => setTipoDefault(e.target.value)}
+            style={{
+              width: '120px',
+              padding: '0.75rem',
+              background: c.background,
+              border: `1px solid ${c.border}`,
+              borderRadius: '4px',
+              color: c.text
+            }}
+          >
+            <option value="exercicio">Exercício</option>
+            <option value="simulado">Simulado</option>
+          </select>
+        </div>
       </div>
 
       <textarea
