@@ -97,12 +97,14 @@ export default function Dashboard({ colors }: DashboardProps) {
   }
 
   async function loadRanking() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("resultado")
       .select("email_usuario, nome_usuario, pf, created_at")
       .order("pf", { ascending: false });
     
-    if (data) {
+    console.log("Ranking data:", data, "error:", error);
+    
+    if (data && data.length > 0) {
       const rankingMap = new Map();
       data.forEach((r: any) => {
         if (!rankingMap.has(r.email_usuario)) {
@@ -124,10 +126,8 @@ export default function Dashboard({ colors }: DashboardProps) {
         .slice(0, 20);
       
       setRanking(rankingArray);
-      setRankingLoading(false);
-    } else {
-      setRankingLoading(false);
     }
+    setRankingLoading(false);
   }
 
   function handleLogout() {
