@@ -54,7 +54,7 @@ export default function Dashboard({ colors }: DashboardProps) {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [results, setResults] = useState<Result[]>([]);
-  const [activeTab, setActiveTab] = useState<"resumo" | "estatisticas" | "historico" | "analise">("resumo");
+  const [activeTab, setActiveTab] = useState<"resumo" | "estatisticas" | "historico" | "analise" | "ranking">("resumo");
   const [ranking, setRanking] = useState<any[]>([]);
   const [rankingLoading, setRankingLoading] = useState(true);
 
@@ -269,7 +269,8 @@ const tendencia = evolution.length >= 2 ? (evolution[evolution.length - 1].media
           { key: "resumo", label: "📊 Resumo" },
           { key: "estatisticas", label: "📈 Estatísticas" },
           { key: "historico", label: "📋 Histórico" },
-          { key: "analise", label: "🎯 Análise" }
+          { key: "analise", label: "🎯 Análise" },
+            { key: "ranking", label: "🏆 Ranking" }
         ].map(tab => (
           <button
             key={tab.key}
@@ -619,13 +620,63 @@ const tendencia = evolution.length >= 2 ? (evolution[evolution.length - 1].media
             </div>
           </div>
         </div>
-      )}
+)}
+
+        {activeTab === "ranking" && (
+          <div style={{ background: c.backgroundSecondary, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "1.5rem" }}>
+            <h3 style={{ color: c.gold, marginBottom: "1.5rem", fontWeight: "bold", fontSize: "1.5rem" }}>🏆 RANKING GERAL</h3>
+            {rankingLoading ? (
+              <div style={{ textAlign: "center", padding: "2rem", color: c.textSecondary }}>
+                Carregando ranking...
+              </div>
+            ) : ranking.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "2rem", color: c.textSecondary }}>
+                Nenhum resultado ainda. Faça um simulado para entrar no ranking!
+              </div>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ borderBottom: `1px solid ${c.border}` }}>
+                      <th style={{ padding: "12px", textAlign: "center", color: c.textSecondary }}>#</th>
+                      <th style={{ padding: "12px", textAlign: "left", color: c.textSecondary }}>Aluno</th>
+                      <th style={{ padding: "12px", textAlign: "center", color: c.textSecondary }}>Melhor PF</th>
+                      <th style={{ padding: "12px", textAlign: "center", color: c.textSecondary }}>Simulados</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ranking.map((r: any, idx: number) => (
+                      <tr key={r.email} style={{ borderBottom: `1px solid ${c.border}`, background: r.email === user?.email ? `${c.gold}30` : "transparent" }}>
+                        <td style={{ padding: "12px", textAlign: "center", fontSize: "1.25rem" }}>
+                          {idx === 0 && "🥇"}
+                          {idx === 1 && "🥈"}
+                          {idx === 2 && "🥉"}
+                          {idx > 2 && <span style={{ color: c.textSecondary }}>{idx + 1}º</span>}
+                        </td>
+                        <td style={{ padding: "12px", color: c.text, fontWeight: r.email === user?.email ? "bold" : "normal" }}>
+                          {r.nome || r.email}
+                          {r.email === user?.email && <span style={{ color: c.gold, marginLeft: "8px", fontSize: "0.875rem" }}>(Você)</span>}
+                        </td>
+                        <td style={{ padding: "12px", textAlign: "center", color: c.gold, fontWeight: "bold", fontSize: "1.125rem" }}>
+                          {r.melhorPF.toFixed(2)}
+                        </td>
+                        <td style={{ padding: "12px", textAlign: "center", color: c.textSecondary }}>
+                          {r.simulados}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
 
       <div style={{ marginTop: "2rem", textAlign: "center" }}>
         <Link href="/simulado">
           <button style={{ 
             background: `linear-gradient(180deg, ${c.gold} 0%, ${c.goldHover} 100%)`, 
-            color: "#000", 
+            color: "#000",
             fontWeight: "bold", 
             padding: "16px 32px", 
             borderRadius: "4px", 
