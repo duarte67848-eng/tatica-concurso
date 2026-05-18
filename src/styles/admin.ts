@@ -5,6 +5,7 @@ export const c = {
   text: "#ffffff",
   textSecondary: "#9ca3af",
   gold: "#ffd700",
+  goldHover: "#b8860b",
   green: "#22c55e",
   red: "#ef4444",
   blue: "#3b82f6",
