@@ -92,8 +92,7 @@ export default function Admin() {
   type TabType = "questions" | "users" | "results" | "pdfs" | "questionsSimulado" | "questionsExercicio" | "relatorio";
   const updateDirecionamento = async (userId: string, text: string) => {
     await supabase.from("usuario").update({ direcionamento: text }).eq("id", userId);
-    alert("Direcionamento salvo!");
-    loadData();
+    setUsers(users.map(u => u.id === userId ? { ...u, direcionamento: text } : u));
   };
 
   const [activeTab, setActiveTab] = useState<TabType>("questionsSimulado");
