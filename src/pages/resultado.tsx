@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Head from "next/head";
 
 function getFeedbackEstrategico(res: any) {
   if (!res || !res.detalhes) return "Continue treinando!";
@@ -62,6 +63,11 @@ export default function Resultado() {
 
   return (
     <div style={{ maxWidth: "48rem", margin: "0 auto" }}>
+      <Head>
+        <title>Resultado do Simulado - TÁTICA CONCURSO</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      </Head>
+      <style>{`@media print{body{background:#fff!important;color:#000!important}div{break-inside:avoid}button{display:none!important}a{display:none!important}}`}</style>
       <h1 style={{ fontSize: "1.875rem", fontWeight: "bold", color: "#ffd700", textAlign: "center", marginBottom: "2rem" }}>
         RESULTADO DO SIMULADO
       </h1>
@@ -106,13 +112,16 @@ export default function Resultado() {
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
+      <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
         <Link href="/simulado" style={{ background: "linear-gradient(180deg, #ffd700 0%, #b8860b 100%)", color: "#000", fontWeight: "bold", padding: "12px 24px", borderRadius: "4px", textDecoration: "none", textTransform: "uppercase", letterSpacing: "1px", display: "inline-block" }}>
           NOVO SIMULADO
         </Link>
         <Link href="/dashboard" style={{ padding: "12px 24px", border: "1px solid #b8860b", color: "#ffd700", borderRadius: "4px", background: "transparent", textDecoration: "none", display: "inline-block" }}>
           VER DASHBOARD
         </Link>
+        <button onClick={() => window.print()} style={{ padding: "12px 24px", border: "1px solid #22c55e", color: "#22c55e", borderRadius: "4px", background: "transparent", cursor: "pointer", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "1px" }}>
+          📄 EXPORTAR PDF
+        </button>
       </div>
     </div>
   );
