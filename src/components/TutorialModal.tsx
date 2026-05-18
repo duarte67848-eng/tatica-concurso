@@ -52,7 +52,7 @@ const TUTORIALS = [
     r: "No modo Bloco dos exercícios, você escolhe UMA disciplina específica (CLPAP, CPJM, CLIPM ou CP) e treina só questões daquela matéria. Ideal para focar nos pontos fracos.",
   },
   {
-    q: "O que é o Relatório de Comando?",
+    q: "O que é o Relatório?",
     r: "Disponível apenas para o admin. Mostra o desempenho individual de cada aluno: PF atual, tendência, peso perdido em questões de alto peso, pontos de cegueira (disciplinas com mais erros) e evolução dos últimos 3 simulados.",
   },
 ];

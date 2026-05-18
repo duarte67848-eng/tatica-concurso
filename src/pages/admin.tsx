@@ -138,7 +138,7 @@ export default function Admin() {
         {tabBtn("users", "ALUNOS", users.length)}
         {tabBtn("pdfs", "BIBLIOTECA PDF", pdfs.length)}
         {tabBtn("results", "RESULTADOS", results.length)}
-        {tabBtn("relatorio", "📊 RELATÓRIO DE COMANDO")}
+        {tabBtn("relatorio", "📊 RELATÓRIO")}
       </div>
 
       {activeTab === "questions" && <QuestionsTab questions={questions} setQuestions={setQuestions} />}
