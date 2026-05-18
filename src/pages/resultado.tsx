@@ -67,7 +67,7 @@ export default function Resultado() {
         <title>Resultado do Simulado - TÁTICA CONCURSO</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
-      <style>{`@media print{body{background:#fff!important;color:#000!important}div{break-inside:avoid}button{display:none!important}a{display:none!important}}`}</style>
+      <style>{`@media print{@page{margin:0.5cm}body{background:#fff!important;color:#000!important;font-size:12pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}.no-print{display:none!important}button{display:none!important}a{display:none!important}.print-card{background:#f5f5f5!important;border:1px solid #ccc!important;border-radius:8px;padding:1.5rem!important;margin-bottom:1rem!important;color:#000!important}.print-card .gold{color:#b8860b!important}.print-card .muted{color:#666!important}.print-card .green{color:#166534!important}.print-card .red{color:#991b1b!important}.print-card h1{font-size:20pt!important;color:#b8860b!important;margin-bottom:1rem!important}.print-card .big{font-size:28pt!important;font-weight:bold!important}.print-card .pf{font-size:42pt!important;font-weight:bold!important;color:#b8860b!important}}`}</style>
       <h1 style={{ fontSize: "1.875rem", fontWeight: "bold", color: "#ffd700", textAlign: "center", marginBottom: "2rem" }}>
         RESULTADO DO SIMULADO
       </h1>
