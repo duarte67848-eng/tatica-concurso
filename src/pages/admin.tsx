@@ -91,8 +91,13 @@ export default function Admin() {
   const [results, setResults] = useState<Result[]>([]);
   type TabType = "questions" | "users" | "results" | "pdfs" | "questionsSimulado" | "questionsExercicio" | "relatorio";
   const updateDirecionamento = async (userId: string, text: string) => {
-    await supabase.from("usuario").update({ direcionamento: text }).eq("id", userId);
+    const { error } = await supabase.from("usuario").update({ direcionamento: text }).eq("id", userId);
+    if (error) {
+      alert("Erro ao salvar: " + error.message);
+      return;
+    }
     setUsers(users.map(u => u.id === userId ? { ...u, direcionamento: text } : u));
+    alert("Direcionamento enviado com sucesso!");
   };
 
   const [activeTab, setActiveTab] = useState<TabType>("questionsSimulado");
