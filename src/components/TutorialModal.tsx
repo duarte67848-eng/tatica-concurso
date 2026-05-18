@@ -12,8 +12,8 @@ const TUTORIALS = [
     r: "Simulado: 80 questões, 4 horas, valendo nota (PF). Simula o dia da prova. Exercício: treino livre por disciplina ou modo inteligente, sem limite de tempo, focado em aprender.",
   },
   {
-    q: "Como funciona a Revisão Inteligente?",
-    r: "Questões que você erra no simulado ou exercício vão para a fila de revisão. Quando você acerta uma revisão, ela sai da fila. O objetivo é zerar a fila dominando todos os conteúdos.",
+    q: "Como funciona a Revisão Inteligente SM-2?",
+    r: "Usa o algoritmo SM-2 (espaçamento ótimo). Cada questão errada entra na fila. Quando você acerta, o sistema calcula quando revisar de novo (1 dia, 6 dias, 1 mês...). Se errar, volta ao início. Após 6 meses sem errar, a questão é dominada automaticamente.",
   },
   {
     q: "O que são os pesos das disciplinas?",

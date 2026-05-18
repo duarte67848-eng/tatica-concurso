@@ -15,6 +15,10 @@ interface RevisaoItem {
   vezes_errada: number;
   errou_em: string;
   resolvida: boolean;
+  ef?: number;
+  intervalo_dias?: number;
+  repeticao?: number;
+  proximo_review?: string;
 }
 
 interface Questao {
@@ -36,6 +40,31 @@ interface RevisaoPageProps {
   toggleTheme?: () => void;
 }
 
+function sm2(qualidade: number, ef: number, repeticao: number, intervalo: number) {
+  const q = Math.max(0, Math.min(5, qualidade));
+  let novoEF = ef + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02));
+  if (novoEF < 1.3) novoEF = 1.3;
+
+  let novoIntervalo: number;
+  let novaRepeticao: number;
+
+  if (q < 3) {
+    novaRepeticao = 0;
+    novoIntervalo = 1;
+  } else {
+    novaRepeticao = repeticao + 1;
+    if (novaRepeticao === 1) {
+      novoIntervalo = 1;
+    } else if (novaRepeticao === 2) {
+      novoIntervalo = 6;
+    } else {
+      novoIntervalo = Math.round(intervalo * novoEF);
+    }
+  }
+
+  return { ef: novoEF, intervalo: novoIntervalo, repeticao: novaRepeticao };
+}
+
 export default function Revisao({ colors }: RevisaoPageProps) {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
@@ -43,7 +72,7 @@ export default function Revisao({ colors }: RevisaoPageProps) {
   const [revisaoList, setRevisaoList] = useState<RevisaoItem[]>([]);
   const [questions, setQuestions] = useState<Questao[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [filter, setFilter] = useState<"todos" | "pendentes" | "resolvidos">("pendentes");
+  const [filter, setFilter] = useState<"todos" | "pendentes" | "resolvidos" | "agendados">("pendentes");
   const [filterBloco, setFilterBloco] = useState<string>("todos");
   const [mode, setMode] = useState<"lista" | "treino">("lista");
 
@@ -94,26 +123,67 @@ export default function Revisao({ colors }: RevisaoPageProps) {
     return questions.find(q => q.id === id);
   }
 
-  async function markAsResolved(id: number) {
-    await supabase
-      .from("revisao")
-      .update({ resolvida: true, ultima_revisao: new Date().toISOString() })
-      .eq("id", id);
-    
-    setRevisaoList(revisaoList.map(r => r.id === id ? { ...r, resolvida: true } : r));
+  function formatProximoReview(dateStr?: string): string {
+    if (!dateStr) return "Imediato";
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diff = date.getTime() - now.getTime();
+    if (diff <= 0) return "Vencida";
+    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    if (days === 0) return "Hoje";
+    if (days === 1) return "Amanhã";
+    if (days < 30) return `${days} dias`;
+    if (days < 365) return `${Math.floor(days / 30)} mês${Math.floor(days / 30) > 1 ? "es" : ""}`;
+    return `${Math.floor(days / 365)} ano${Math.floor(days / 365) > 1 ? "s" : ""}`;
+  }
+
+  async function sm2Update(item: RevisaoItem, acertou: boolean) {
+    const ef = item.ef ?? 2.5;
+    const rep = item.repeticao ?? 0;
+    const intervalo = item.intervalo_dias ?? 0;
+    const qualidade = acertou ? (Math.random() < 0.2 ? 3 : Math.random() < 0.4 ? 4 : 5) : 1;
+
+    const result = sm2(qualidade, ef, rep, intervalo);
+
+    const proximo = new Date();
+    proximo.setDate(proximo.getDate() + result.intervalo);
+
+    const mastered = result.intervalo > 180;
+
+    await supabase.from("revisao").update({
+      ef: result.ef,
+      intervalo_dias: result.intervalo,
+      repeticao: result.repeticao,
+      proximo_review: proximo.toISOString(),
+      resolvida: mastered ? true : false,
+      ultima_revisao: new Date().toISOString()
+    }).eq("id", item.id);
+
+    setRevisaoList(revisaoList.map(r =>
+      r.id === item.id ? {
+        ...r,
+        ef: result.ef,
+        intervalo_dias: result.intervalo,
+        repeticao: result.repeticao,
+        proximo_review: proximo.toISOString(),
+        resolvida: mastered ? true : r.resolvida
+      } : r
+    ));
+  }
+
+  function filteredList() {
+    const now = new Date();
+    let list = revisaoList;
+    if (filter === "pendentes") list = list.filter(r => !r.resolvida && (!r.proximo_review || new Date(r.proximo_review) <= now));
+    if (filter === "agendados") list = list.filter(r => !r.resolvida && r.proximo_review && new Date(r.proximo_review) > now);
+    if (filter === "resolvidos") list = list.filter(r => r.resolvida);
+    if (filterBloco !== "todos") list = list.filter(r => r.bloco === filterBloco);
+    return list;
   }
 
   async function deleteFromRevisao(id: number) {
     await supabase.from("revisao").delete().eq("id", id);
     setRevisaoList(revisaoList.filter(r => r.id !== id));
-  }
-
-  function filteredList() {
-    let list = revisaoList;
-    if (filter === "pendentes") list = list.filter(r => !r.resolvida);
-    if (filter === "resolvidos") list = list.filter(r => r.resolvida);
-    if (filterBloco !== "todos") list = list.filter(r => r.bloco === filterBloco);
-    return list;
   }
 
   function handleLogout() {
@@ -123,7 +193,8 @@ export default function Revisao({ colors }: RevisaoPageProps) {
 
   const stats = {
     total: revisaoList.length,
-    pendentes: revisaoList.filter(r => !r.resolvida).length,
+    pendentes: revisaoList.filter(r => !r.resolvida && (!r.proximo_review || new Date(r.proximo_review) <= new Date())).length,
+    agendados: revisaoList.filter(r => !r.resolvida && r.proximo_review && new Date(r.proximo_review) > new Date()).length,
     resolvidos: revisaoList.filter(r => r.resolvida).length,
     clpap: revisaoList.filter(r => r.bloco === "CLPAP" && !r.resolvida).length,
     cpjm: revisaoList.filter(r => r.bloco === "CPJM" && !r.resolvida).length,
@@ -138,15 +209,15 @@ export default function Revisao({ colors }: RevisaoPageProps) {
   const [answer, setAnswer] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
 
-  function handleAnswer(opt: string) {
-    if (showResult) return;
+  async function handleAnswer(opt: string) {
+    if (showResult || !currentQuestion) return;
     setAnswer(opt);
     setShowResult(true);
     
     const revisao = filteredList()[currentIndex];
-    if (opt === currentQuestion?.resposta_correta) {
-      markAsResolved(revisao.id);
-    }
+    const acertou = opt === currentQuestion.resposta_correta;
+    
+    await sm2Update(revisao, acertou);
   }
 
   function nextQuestion() {
@@ -169,7 +240,7 @@ export default function Revisao({ colors }: RevisaoPageProps) {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
         <h1 style={{ fontSize: "1.875rem", fontWeight: "bold", color: c.gold }}>
-          🎯 SISTEMA DE REVISÃO INTELIGENTE
+          🎯 REVISÃO INTELIGENTE SM-2
         </h1>
         <div style={{ display: "flex", gap: "1rem" }}>
           <Link href="/dashboard">
@@ -185,12 +256,16 @@ export default function Revisao({ colors }: RevisaoPageProps) {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
         <div style={{ background: c.backgroundSecondary, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "1rem", textAlign: "center" }}>
-          <div style={{ color: c.textSecondary, fontSize: "0.75rem" }}>TOTAL ERROS</div>
+          <div style={{ color: c.textSecondary, fontSize: "0.75rem" }}>TOTAL</div>
           <div style={{ color: c.gold, fontSize: "1.5rem", fontWeight: "bold" }}>{stats.total}</div>
         </div>
         <div style={{ background: c.backgroundSecondary, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "1rem", textAlign: "center" }}>
           <div style={{ color: c.textSecondary, fontSize: "0.75rem" }}>PENDENTES</div>
           <div style={{ color: c.red, fontSize: "1.5rem", fontWeight: "bold" }}>{stats.pendentes}</div>
+        </div>
+        <div style={{ background: c.backgroundSecondary, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "1rem", textAlign: "center" }}>
+          <div style={{ color: c.textSecondary, fontSize: "0.75rem" }}>AGENDADOS</div>
+          <div style={{ color: c.blue, fontSize: "1.5rem", fontWeight: "bold" }}>{stats.agendados}</div>
         </div>
         <div style={{ background: c.backgroundSecondary, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "1rem", textAlign: "center" }}>
           <div style={{ color: c.textSecondary, fontSize: "0.75rem" }}>RESOLVIDOS</div>
@@ -215,14 +290,19 @@ export default function Revisao({ colors }: RevisaoPageProps) {
       </div>
 
       <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
-        {["todos", "pendentes", "resolvidos"].map(f => (
+        {[
+          { key: "pendentes", label: "Pendentes", color: c.red },
+          { key: "agendados", label: "Agendados", color: c.blue },
+          { key: "todos", label: "Todos", color: c.text },
+          { key: "resolvidos", label: "Resolvidos", color: c.green },
+        ].map(f => (
           <button
-            key={f}
-            onClick={() => { setFilter(f as any); setMode("lista"); }}
+            key={f.key}
+            onClick={() => { setFilter(f.key as any); setMode("lista"); }}
             style={{
               padding: "8px 16px",
-              background: filter === f ? c.gold : c.backgroundTertiary,
-              color: filter === f ? "#000" : c.text,
+              background: filter === f.key ? f.color : c.backgroundTertiary,
+              color: filter === f.key ? "#000" : c.text,
               border: `1px solid ${c.border}`,
               borderRadius: "4px",
               cursor: "pointer",
@@ -230,7 +310,7 @@ export default function Revisao({ colors }: RevisaoPageProps) {
               fontSize: "0.875rem"
             }}
           >
-            {f === "todos" ? "Todos" : f === "pendentes" ? "Pendentes" : "Resolvidos"}
+            {f.label}
           </button>
         ))}
         
@@ -261,7 +341,7 @@ export default function Revisao({ colors }: RevisaoPageProps) {
               marginLeft: "auto"
             }}
           >
-            🚀 Iniciar Treino de Revisão
+            🚀 Iniciar Treino ({stats.pendentes})
           </button>
         )}
       </div>
@@ -275,25 +355,27 @@ export default function Revisao({ colors }: RevisaoPageProps) {
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             {filteredList().slice(0, 20).map(r => {
               const q = getQuestaoById(r.questao_id);
+              const isVencida = !r.resolvida && r.proximo_review && new Date(r.proximo_review) <= new Date();
               return (
-                <div key={r.id} style={{ background: c.backgroundSecondary, border: `1px solid ${r.resolvida ? c.green : c.border}`, borderRadius: "8px", padding: "1rem" }}>
+                <div key={r.id} style={{ background: c.backgroundSecondary, border: `1px solid ${r.resolvida ? c.green : isVencida ? c.red : c.border}`, borderRadius: "8px", padding: "1rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", flexWrap: "wrap", gap: "0.5rem" }}>
                     <div>
                       <span style={{ color: c.gold, fontWeight: "bold" }}>{r.bloco}</span>
                       <span style={{ color: c.textSecondary, marginLeft: "0.5rem", fontSize: "0.875rem" }}>
                         Errada {r.vezes_errada}x
                       </span>
-                    </div>
-                    <div style={{ display: "flex", gap: "0.5rem" }}>
-                      {!r.resolvida && (
-                        <button onClick={() => markAsResolved(r.id)} style={{ background: c.green, color: "#000", padding: "4px 12px", borderRadius: "4px", border: "none", cursor: "pointer", fontSize: "0.75rem" }}>
-                          ✓ Marcar
-                        </button>
+                      {r.proximo_review && !r.resolvida && (
+                        <span style={{ color: isVencida ? c.red : c.blue, marginLeft: "0.5rem", fontSize: "0.75rem" }}>
+                          {isVencida ? "⚠ Vencida" : `⏰ ${formatProximoReview(r.proximo_review)}`}
+                        </span>
                       )}
-                      <button onClick={() => deleteFromRevisao(r.id)} style={{ background: c.red, color: "#fff", padding: "4px 12px", borderRadius: "4px", border: "none", cursor: "pointer", fontSize: "0.75rem" }}>
-                        ✕
-                      </button>
+                      {(r.ef ?? 2.5) < 2 && (
+                        <span style={{ color: c.red, marginLeft: "0.5rem", fontSize: "0.75rem" }}>🔴 Difícil</span>
+                      )}
                     </div>
+                    <button onClick={() => deleteFromRevisao(r.id)} style={{ background: c.red, color: "#fff", padding: "4px 12px", borderRadius: "4px", border: "none", cursor: "pointer", fontSize: "0.75rem" }}>
+                      ✕ Remover
+                    </button>
                   </div>
                   {q && (
                     <div style={{ color: c.text, fontSize: "0.875rem", marginBottom: "0.5rem" }}>
@@ -336,7 +418,7 @@ export default function Revisao({ colors }: RevisaoPageProps) {
 
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             {["A", "B", "C", "D", "E"].map(opt => {
-              const text = currentQuestion[`alternativa_${opt.toLowerCase()}` as keyof Question];
+              const text = currentQuestion[`alternativa_${opt.toLowerCase()}` as keyof Questao];
               const isCorrect = opt === currentQuestion.resposta_correta;
               const isSelected = answer === opt;
               
