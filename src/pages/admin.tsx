@@ -90,9 +90,7 @@ export default function Admin() {
   const [blockedUsers, setBlockedUsers] = useState<User[]>([]);
   const [results, setResults] = useState<Result[]>([]);
   type TabType = "questions" | "users" | "results" | "pdfs" | "questionsSimulado" | "questionsExercicio" | "relatorio";
-  const [direcionamentoInputs, setDirecionamentoInputs] = useState<Record<string, string>>({});
-const updateDirecionamento = async (userId: string) => {
-    const text = direcionamentoInputs[userId] || "";
+  const updateDirecionamento = async (userId: string, text: string) => {
     await supabase.from("usuario").update({ direcionamento: text }).eq("id", userId);
     setUsers(users.map(u => u.id === userId ? { ...u, direcionamento: text } : u));
   };
@@ -779,13 +777,16 @@ onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAut
                     </div>
                     <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem" }}>
                       <input 
+                        id={"dir-" + u.id}
                         type="text" 
                         placeholder="Direcionamento para aluno..."
-                        value={direcionamentoInputs[u.id] ?? u.direcionamento ?? ""}
-                        onChange={(e) => setDirecionamentoInputs(prev => ({ ...prev, [u.id]: e.target.value }))}
+                        defaultValue={u.direcionamento ?? ""}
                         style={{ flex: 1, background: "#0d0d0d", color: "#fff", padding: "8px", border: "1px solid #333", borderRadius: "4px" }}
                       />
-                      <button onClick={() => updateDirecionamento(u.id)} style={{ background: "#ffd700", color: "#000", fontWeight: "bold", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+                      <button onClick={() => {
+                        const input = document.getElementById("dir-" + u.id) as HTMLInputElement;
+                        if (input) updateDirecionamento(u.id, input.value);
+                      }} style={{ background: "#ffd700", color: "#000", fontWeight: "bold", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
                         ENVIAR
                       </button>
                     </div>
