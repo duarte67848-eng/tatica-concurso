@@ -6,10 +6,14 @@ function getFeedbackEstrategico(res: any) {
   
   const pioresBlocos = Object.entries(res.detalhes as Record<string, {acertos: number, total: number}>)
     .map(([nome, dados]) => ({ nome, taxa: dados.total > 0 ? (dados.acertos / dados.total) * 100 : 0 }))
+    .filter(b => b.taxa > 0)
     .sort((a, b) => a.taxa - b.taxa);
+
+  if (pioresBlocos.length === 0) return "Continue treinando!";
 
   const pior = pioresBlocos[0];
   const pf = parseFloat(res.pf);
+  if (isNaN(pf)) return "Continue treinando!";
 
   if (pf < 5) {
     return `⚠️ **Alerta Estratégico:** Priorize o bloco **${pior.nome}** (${pior.taxa.toFixed(0)}% de acerto). Foque em revisar a teoria básica antes de novos exercícios.`;
@@ -43,7 +47,7 @@ export default function Resultado() {
     );
   }
 
-  const percentage = ((result.acertos / result.questions) * 100).toFixed(1);
+  const percentage = result.questions > 0 ? ((result.acertos / result.questions) * 100).toFixed(1) : "0.0";
   
   const getClassification = (pf: number) => {
     const pct = pf * 100 / 10;
@@ -103,15 +107,11 @@ export default function Resultado() {
       </div>
 
       <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
-        <Link href="/simulado">
-          <button style={{ background: "linear-gradient(180deg, #ffd700 0%, #b8860b 100%)", color: "#000", fontWeight: "bold", padding: "12px 24px", borderRadius: "4px", border: "none", cursor: "pointer", textTransform: "uppercase", letterSpacing: "1px" }}>
-            NOVO SIMULADO
-          </button>
+        <Link href="/simulado" style={{ background: "linear-gradient(180deg, #ffd700 0%, #b8860b 100%)", color: "#000", fontWeight: "bold", padding: "12px 24px", borderRadius: "4px", textDecoration: "none", textTransform: "uppercase", letterSpacing: "1px", display: "inline-block" }}>
+          NOVO SIMULADO
         </Link>
-        <Link href="/dashboard">
-          <button style={{ padding: "12px 24px", border: "1px solid #b8860b", color: "#ffd700", borderRadius: "4px", background: "transparent", cursor: "pointer" }}>
-            VER DASHBOARD
-          </button>
+        <Link href="/dashboard" style={{ padding: "12px 24px", border: "1px solid #b8860b", color: "#ffd700", borderRadius: "4px", background: "transparent", textDecoration: "none", display: "inline-block" }}>
+          VER DASHBOARD
         </Link>
       </div>
     </div>

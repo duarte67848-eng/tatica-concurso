@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { supabase } from "../lib/supabase";
+import OnboardingTour from "../components/OnboardingTour";
 
 interface Result {
   id: number;
@@ -57,6 +58,14 @@ export default function Dashboard({ colors }: DashboardProps) {
   const [activeTab, setActiveTab] = useState<"resumo" | "estatisticas" | "historico" | "analise" | "ranking">("resumo");
   const [ranking, setRanking] = useState<any[]>([]);
   const [rankingLoading, setRankingLoading] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const done = localStorage.getItem("tatica-onboarding-done");
+      if (!done) setShowOnboarding(true);
+    }
+  }, []);
 
   const c = colors || {
     background: "#0d0d0d",
@@ -164,13 +173,31 @@ export default function Dashboard({ colors }: DashboardProps) {
     results.forEach(r => {
       if (r.detalhes) {
         try {
-          const detalhes: DetalheQuestao[] = JSON.parse(r.detalhes);
-          detalhes.forEach((d: DetalheQuestao) => {
-            if (d.disciplina && blocks[d.disciplina]) {
-              blocks[d.disciplina].total++;
-              if (d.acertou) blocks[d.disciplina].acertos++;
+          if (typeof r.detalhes === 'string') {
+            const parsed = JSON.parse(r.detalhes);
+            if (Array.isArray(parsed)) {
+              parsed.forEach((d: DetalheQuestao) => {
+                if (d.disciplina && blocks[d.disciplina]) {
+                  blocks[d.disciplina].total++;
+                  if (d.acertou) blocks[d.disciplina].acertos++;
+                }
+              });
+            } else {
+              Object.entries(parsed).forEach(([disc, stats]: [string, any]) => {
+                if (blocks[disc] && stats.total > 0) {
+                  blocks[disc].total += stats.total;
+                  blocks[disc].acertos += stats.acertos;
+                }
+              });
             }
-          });
+          } else {
+            Object.entries(r.detalhes as any).forEach(([disc, stats]: [string, any]) => {
+              if (blocks[disc] && stats.total > 0) {
+                blocks[disc].total += stats.total;
+                blocks[disc].acertos += stats.acertos;
+              }
+            });
+          }
         } catch {}
       }
     });
@@ -199,7 +226,7 @@ export default function Dashboard({ colors }: DashboardProps) {
   };
 
 const evolution = getEvolutionData();
-const tendencia = evolution.length >= 2 ? (evolution[evolution.length - 1].media - evolution[0].media).toFixed(2) : "0.00";
+const tendencia = evolution.length >= 2 ? (evolution[0].media - evolution[evolution.length - 1].media).toFixed(2) : "0.00";
 
   const getRadarData = () => {
     return [
@@ -261,13 +288,17 @@ const tendencia = evolution.length >= 2 ? (evolution[evolution.length - 1].media
         </button>
       </div>
 
+      {showOnboarding && <OnboardingTour colors={c} onComplete={() => { setShowOnboarding(false); localStorage.setItem("tatica-onboarding-done", "1"); }} />}
       {user && (
         <div style={{ marginBottom: "1.5rem", padding: "1rem", background: c.backgroundSecondary, borderRadius: "8px", border: `1px solid ${c.border}` }}>
           <span style={{ color: c.textSecondary }}>Operador: </span>
           <span style={{ color: c.gold, fontWeight: "bold" }}>{user.name}</span>
           {ranking.length > 0 && (
             <span style={{ marginLeft: "1rem", color: c.textSecondary }}>
-              | Ranking Geral: <span style={{ color: c.blue, fontWeight: "bold" }}>#{ranking.findIndex((r: any) => r.email === user?.email) + 1}</span>
+              | Ranking Geral: <span style={{ color: c.blue, fontWeight: "bold" }}>{(() => {
+                const pos = ranking.findIndex((r: any) => r.email === user?.email);
+                return pos >= 0 ? `#${pos + 1}` : "Fora do Top 20";
+              })()}</span>
             </span>
           )}
         </div>

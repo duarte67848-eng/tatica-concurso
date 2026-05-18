@@ -133,7 +133,7 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
     } else if (mode === "bloco") {
       const disciplina = filterBloco;
       const blocoQuestions = questions.filter(q => q.disciplina === disciplina);
-      console.log("CLPAP:", questions.filter(q => q.disciplina === "CLPAP").length);
+      console.log(disciplina + ":", blocoQuestions.length);
       exQuestions = blocoQuestions.slice(0, filterQuantidade);
     } else if (mode === "rapido") {
       exQuestions = getFilteredQuestions().filter(q => q.tipo === "exercicio" || !q.tipo).slice(0, filterQuantidade);
@@ -401,7 +401,7 @@ export default function BancoExercicios({ colors }: BancoExerciciosProps) {
              <div style={{ display: "flex", alignItems: "center" }}>
                <span style={{ color: c.gold, fontWeight: "bold" }}>{currentQuestion.disciplina}</span>
                <span style={{ color: c.textSecondary, marginLeft: "1rem" }}>
-                 Questão {currentIndex + 1} de {questions.length}
+                  Questão {currentIndex + 1} de {exerciseQuestions.length}
                </span>
              </div>
             <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>

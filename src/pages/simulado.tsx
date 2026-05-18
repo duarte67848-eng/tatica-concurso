@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import Link from "next/link";
 import { supabase } from "../lib/supabase";
 
 interface Question {
@@ -180,6 +181,17 @@ export default function Simulado({ colors }: { colors?: any }) {
   }
 
   const currentQuestion = questions[currentIndex];
+
+  if (!currentQuestion && questions.length === 0) {
+    return (
+      <div style={{ textAlign: "center", padding: "3rem" }}>
+        <div style={{ color: "#9ca3af", marginBottom: "1rem" }}>Nenhuma questão disponível</div>
+        <Link href="/dashboard" style={{ background: "linear-gradient(180deg, #ffd700 0%, #b8860b 100%)", color: "#000", fontWeight: "bold", padding: "12px 24px", borderRadius: "4px", textDecoration: "none", textTransform: "uppercase", letterSpacing: "1px", display: "inline-block" }}>
+          VOLTAR AO DASHBOARD
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div>

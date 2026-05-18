@@ -1,6 +1,7 @@
 import "../styles/globals.css";
 import { useState, useEffect } from "react";
 import type { AppProps } from "next/app";
+import TutorialModal from "../components/TutorialModal";
 
 export function formatDateTime(date: Date | string): { data: string; hora: string } {
   const d = typeof date === "string" ? new Date(date) : date;
@@ -145,6 +146,7 @@ function useTheme() {
 export default function App({ Component, pageProps }: AppProps) {
   const { isDark, toggleTheme, colors } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -195,6 +197,22 @@ export default function App({ Component, pageProps }: AppProps) {
               {getCurrentDateTimeCuiaba().completo}
             </div>
             <button 
+              onClick={() => setShowHelp(true)}
+              style={{
+                background: colors.backgroundTertiary,
+                border: `1px solid ${colors.border}`,
+                color: colors.gold,
+                padding: "8px 12px",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "1rem",
+                fontWeight: "bold",
+              }}
+              title="Ajuda"
+            >
+              ❓
+            </button>
+            <button 
               onClick={toggleTheme}
               style={{
                 background: colors.backgroundTertiary,
@@ -225,6 +243,7 @@ export default function App({ Component, pageProps }: AppProps) {
       <main style={{ flex: 1, padding: "1rem", maxWidth: "1200px", margin: "0 auto", width: "100%" }}>
         <Component {...pageProps} colors={colors} isDark={isDark} toggleTheme={toggleTheme} />
       </main>
+      {showHelp && <TutorialModal colors={colors} onClose={() => setShowHelp(false)} />}
       <footer style={{ background: colors.backgroundSecondary, borderTop: `1px solid ${colors.border}`, padding: "1rem", textAlign: "center" }}>
         <p style={{ color: colors.textSecondary, fontSize: "0.875rem" }}>
           © 2026 TÁTICA CONCURSO - Sistema de Simulados Militares
