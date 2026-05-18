@@ -45,7 +45,7 @@ const TUTORIALS = [
   },
   {
     q: "O que significam as Classificações? E as Graduações?",
-    r: "A CLASSIFICAÇÃO aparece no resultado do simulado (Comando Elite, Operador Estratégico, etc.). Já as GRADUAÇÕES são automáticas — conforme sua PF evolui, o sistema te promove: 🪖 Aluno Soldado (PF 0-1.25) → ⭐ Soldado (PF 1.26-2.5) → ⭐⭐ Cabo (PF 2.51-3.75) → ⭐⭐⭐ Aluno a Sargento (PF 3.76-5) → 🔰 3° Sargento (PF 5.01-6) → 💎 2° Sargento (PF 6.01-7) → 👑 1° Sargento (PF 7.01-8.5) → ⚜️ Sub Tenente (PF 8.51-10).",
+    r: "CLASSIFICAÇÃO (aparece no resultado do simulado): Comando Elite ⭐⭐⭐ | Operador Estratégico ⭐⭐ | Tropa Tática ⭐ | Linha Operacional | Em Treinamento.\n\nGRADUAÇÕES (automáticas, o sistema promove pela PF): 🪖 Aluno Soldado (0-1.25) → ⭐ Soldado (1.26-2.5) → ⭐⭐ Cabo (2.51-3.75) → ⭐⭐⭐ Aluno a Sargento (3.76-5) → 🔰 3° Sargento (5.01-6) → 💎 2° Sargento (6.01-7) → 👑 1° Sargento (7.01-8.5) → ⚜️ Sub Tenente (8.51-10).",
   },
   {
     q: "Como funciona o modo Bloco?",
