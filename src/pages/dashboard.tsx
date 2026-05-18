@@ -458,7 +458,8 @@ const tendencia = evolution.length >= 2 ? (evolution[0].media - evolution[evolut
       )}
 
       {activeTab === "estatisticas" && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem" }}>
           <div style={{ background: c.backgroundSecondary, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "1.5rem" }}>
             <h3 style={{ color: c.gold, marginBottom: "1rem" }}>Taxa de Acerto</h3>
             <div style={{ display: "flex", justifyContent: "center", alignItems: "center", marginBottom: "1rem" }}>
@@ -551,6 +552,27 @@ const tendencia = evolution.length >= 2 ? (evolution[0].media - evolution[evolut
               </div>
             </div>
           </div>
+          </div>
+
+          {results.length > 1 && (
+            <div style={{ background: c.backgroundSecondary, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "1.5rem" }}>
+              <h3 style={{ color: c.gold, marginBottom: "1rem" }}>Taxa de Acerto por Simulado</h3>
+              <div style={{ display: "flex", alignItems: "flex-end", gap: "0.5rem", height: "120px" }}>
+                {[...results].reverse().map((r, idx) => {
+                  const pct = r.total_questoes > 0 ? (r.acertos / r.total_questoes) * 100 : 0;
+                  return (
+                    <div key={idx} style={{ flex: 1, textAlign: "center" }}>
+                      <div style={{ height: `${Math.max(4, (pct / 100) * 100)}px`, background: pct >= 70 ? c.green : pct >= 50 ? c.gold : c.red, borderRadius: "4px 4px 0 0", marginBottom: "0.25rem" }} title={`${pct.toFixed(1)}%`} />
+                      <div style={{ color: c.textSecondary, fontSize: "0.6rem" }}>#{idx + 1}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ marginTop: "1rem", textAlign: "center", color: c.textSecondary, fontSize: "0.8rem" }}>
+                Verde &ge; 70% | Amarelo &ge; 50% | Vermelho &lt; 50%
+              </div>
+            </div>
+          )}
         </div>
       )}
 
