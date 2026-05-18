@@ -410,7 +410,7 @@ const tendencia = evolution.length >= 2 ? (evolution[evolution.length - 1].media
                       borderRadius: "4px 4px 0 0",
                       marginBottom: "0.25rem"
                     }} />
-                    <div style={{ color: c.textSecondary, fontSize: "0.6rem" }}>{e.week.slice(-2)}</div>
+                    <div style={{ color: c.textSecondary, fontSize: "0.6rem" }}>S{e.week.slice(-2)}</div>
                   </div>
                 ))}
               </div>
