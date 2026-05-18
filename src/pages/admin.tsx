@@ -90,7 +90,9 @@ export default function Admin() {
   const [blockedUsers, setBlockedUsers] = useState<User[]>([]);
   const [results, setResults] = useState<Result[]>([]);
   type TabType = "questions" | "users" | "results" | "pdfs" | "questionsSimulado" | "questionsExercicio" | "relatorio";
-  const updateDirecionamento = async (userId: string, text: string) => {
+  const [direcionamentoInputs, setDirecionamentoInputs] = useState<Record<string, string>>({});
+const updateDirecionamento = async (userId: string) => {
+    const text = direcionamentoInputs[userId] || "";
     await supabase.from("usuario").update({ direcionamento: text }).eq("id", userId);
     setUsers(users.map(u => u.id === userId ? { ...u, direcionamento: text } : u));
   };
@@ -775,14 +777,17 @@ onKeyDown={(e) => { if (e.key === "Enter") { if (adminPassword === "1") setIsAut
                         <span style={{ color: "#ffd700", fontSize: "0.875rem", fontWeight: "bold" }}>{u.patente || "Aluno Soldado"}</span>
                       </span>
                     </div>
-                    <div style={{ marginTop: "1rem" }}>
+                    <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem" }}>
                       <input 
                         type="text" 
-                        placeholder="Direcionamento para aluno..." 
-                        defaultValue={u.direcionamento || ""}
-                        onBlur={(e) => updateDirecionamento(u.id, e.target.value)}
-                        style={{ width: "100%", background: "#0d0d0d", color: "#fff", padding: "8px", border: "1px solid #333", borderRadius: "4px" }}
+                        placeholder="Direcionamento para aluno..."
+                        value={direcionamentoInputs[u.id] ?? u.direcionamento ?? ""}
+                        onChange={(e) => setDirecionamentoInputs(prev => ({ ...prev, [u.id]: e.target.value }))}
+                        style={{ flex: 1, background: "#0d0d0d", color: "#fff", padding: "8px", border: "1px solid #333", borderRadius: "4px" }}
                       />
+                      <button onClick={() => updateDirecionamento(u.id)} style={{ background: "#ffd700", color: "#000", fontWeight: "bold", padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer" }}>
+                        ENVIAR
+                      </button>
                     </div>
                   <div style={{ display: "flex", gap: "0.5rem", marginTop: "1rem" }}>
                     {!u.aprovado && (
