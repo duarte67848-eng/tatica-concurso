@@ -51,47 +51,66 @@ export default function ResultsTab({ results, setResults }: {
                     </div>
                   ) : (() => {
                     try {
-                      const detalhes: DetalheQuestao[] = JSON.parse(r.detalhes);
-                      const discip = ["CLPAP", "CPJM", "CLIPM", "CP"].map(d => ({
-                        nome: d, itens: detalhes.filter(x => x.disciplina === d)
-                      }));
+                      const raw = typeof r.detalhes === "string" ? JSON.parse(r.detalhes) : r.detalhes;
+                      const blocos = ["CLPAP", "CPJM", "CLIPM", "CP"];
 
-                      return (
-                        <>
-                          <h3 style={{ color: c.gold, marginBottom: "0.75rem" }}>Acertos por Disciplina</h3>
-                          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.5rem", marginBottom: "1rem" }}>
-                            {discip.map(({ nome, itens }) => {
-                              const acertos = itens.filter(x => x.acertou).length;
-                              return (
-                                <div key={nome} style={{ background: c.backgroundSecondary, padding: "0.75rem", borderRadius: "4px", textAlign: "center" }}>
-                                  <div style={{ color: c.textSecondary, fontSize: "0.75rem" }}>{nome}</div>
-                                  <div style={{ color: c.green, fontSize: "1.25rem", fontWeight: "bold" }}>{acertos}/{itens.length}</div>
+                      if (Array.isArray(raw)) {
+                        const detalhes: DetalheQuestao[] = raw;
+                        const discip = blocos.map(d => ({ nome: d, itens: detalhes.filter((x: DetalheQuestao) => x.disciplina === d) }));
+                        return (
+                          <>
+                            <h3 style={{ color: c.gold, marginBottom: "0.75rem" }}>Acertos por Disciplina</h3>
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.5rem", marginBottom: "1rem" }}>
+                              {discip.map(({ nome, itens }) => {
+                                const acertos = itens.filter(x => x.acertou).length;
+                                return (
+                                  <div key={nome} style={{ background: c.backgroundSecondary, padding: "0.75rem", borderRadius: "4px", textAlign: "center" }}>
+                                    <div style={{ color: c.textSecondary, fontSize: "0.75rem" }}>{nome}</div>
+                                    <div style={{ color: c.green, fontSize: "1.25rem", fontWeight: "bold" }}>{acertos}/{itens.length}</div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                            <h3 style={{ color: c.gold, marginBottom: "0.5rem" }}>Detalhamento por Questão</h3>
+                            <div style={{ maxHeight: "300px", overflowY: "auto" }}>
+                              {detalhes.map((d, idx) => (
+                                <div key={idx} style={{ padding: "8px", borderBottom: `1px solid ${c.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                  <div>
+                                    <span style={{ color: c.textSecondary, fontSize: "0.75rem" }}>{d.disciplina}</span>
+                                    <span style={{ marginLeft: "8px", color: c.text }}>Q{idx + 1}</span>
+                                  </div>
+                                  <div>
+                                    <span style={{ color: c.text, marginRight: "8px" }}>
+                                      Sua: <strong style={{ color: d.acertou ? c.green : c.red }}>{d.resposta_usuario}</strong>
+                                    </span>
+                                    <span style={{ color: c.textSecondary }}>
+                                      Certa: <strong style={{ color: c.green }}>{d.resposta_correta}</strong>
+                                    </span>
+                                  </div>
                                 </div>
-                              );
-                            })}
-                          </div>
-
-                          <h3 style={{ color: c.gold, marginBottom: "0.5rem" }}>Detalhamento por Questão</h3>
-                          <div style={{ maxHeight: "300px", overflowY: "auto" }}>
-                            {detalhes.map((d, idx) => (
-                              <div key={idx} style={{ padding: "8px", borderBottom: `1px solid ${c.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                <div>
-                                  <span style={{ color: c.textSecondary, fontSize: "0.75rem" }}>{d.disciplina}</span>
-                                  <span style={{ marginLeft: "8px", color: c.text }}>Q{idx + 1}</span>
-                                </div>
-                                <div>
-                                  <span style={{ color: c.text, marginRight: "8px" }}>
-                                    Sua: <strong style={{ color: d.acertou ? c.green : c.red }}>{d.resposta_usuario}</strong>
-                                  </span>
-                                  <span style={{ color: c.textSecondary }}>
-                                    Certa: <strong style={{ color: c.green }}>{d.resposta_correta}</strong>
-                                  </span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </>
-                      );
+                              ))}
+                            </div>
+                          </>
+                        );
+                      } else {
+                        const obj = raw as Record<string, { acertos: number; total: number }>;
+                        return (
+                          <>
+                            <h3 style={{ color: c.gold, marginBottom: "0.75rem" }}>Acertos por Disciplina</h3>
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.5rem" }}>
+                              {blocos.map(d => {
+                                const stats = obj[d] || { acertos: 0, total: 0 };
+                                return (
+                                  <div key={d} style={{ background: c.backgroundSecondary, padding: "0.75rem", borderRadius: "4px", textAlign: "center" }}>
+                                    <div style={{ color: c.textSecondary, fontSize: "0.75rem" }}>{d}</div>
+                                    <div style={{ color: c.green, fontSize: "1.25rem", fontWeight: "bold" }}>{stats.acertos}/{stats.total}</div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </>
+                        );
+                      }
                     } catch {
                       return <div style={{ color: c.red }}>Erro ao carregar detalhes</div>;
                     }
