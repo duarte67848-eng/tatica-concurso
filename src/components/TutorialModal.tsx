@@ -40,16 +40,13 @@ const TUTORIALS = [
     r: "Direcionamento é um recado que o administrador envia para você. Aparece no topo do seu Dashboard. Pode conter orientações de estudo, feedback ou instruções específicas do seu comandante.",
   },
   {
-    q: "Como funciona o sistema de Patentes?",
-    r: "As patentes são: Aluno Soldado → Soldado → Cabo → Aluno a Sargento → 3º Sargento → 2º Sargento → 1º Sargento → Sub Tenente. A cada evolução nos estudos, você pode ser promovido pelo admin.",
-  },
-  {
     q: "Pra que servem Favoritos e Difíceis?",
     r: "⭐ Favoritos: marque questões importantes para revisar depois. 🎯 Difíceis: questões que você errou e pode consultar separadamente. Ambas as listas ficam acessíveis no menu do cabeçalho.",
   },
   {
     q: "O que significam as Classificações? E as Graduações?",
-    r: "A CLASSIFICAÇÃO aparece no resultado do simulado (Comando Elite, Operador Estratégico, etc.). Já as GRADUAÇÕES são definidas pela sua PF: 🪖 Aluno Soldado (PF 0-1.25) → ⭐ Soldado (PF 1.26-2.5) → ⭐⭐ Cabo (PF 2.51-3.75) → ⭐⭐⭐ Aluno a Sargento (PF 3.76-5) → 🔰 3° Sargento (PF 5.01-6) → 💎 2° Sargento (PF 6.01-7) → 👑 1° Sargento (PF 7.01-8.5) → ⚜️ Sub Tenente (PF 8.51-10).",
+    r: "A CLASSIFICAÇÃO aparece no resultado do simulado (Comando Elite, Operador Estratégico, etc.). Já as GRADUAÇÕES são automáticas — conforme sua PF evolui, o sistema te promove: 🪖 Aluno Soldado (PF 0-1.25) → ⭐ Soldado (PF 1.26-2.5) → ⭐⭐ Cabo (PF 2.51-3.75) → ⭐⭐⭐ Aluno a Sargento (PF 3.76-5) → 🔰 3° Sargento (PF 5.01-6) → 💎 2° Sargento (PF 6.01-7) → 👑 1° Sargento (PF 7.01-8.5) → ⚜️ Sub Tenente (PF 8.51-10).",
+  },
   {
     q: "Como funciona o modo Bloco?",
     r: "No modo Bloco dos exercícios, você escolhe UMA disciplina específica (CLPAP, CPJM, CLIPM ou CP) e treina só questões daquela matéria. Ideal para focar nos pontos fracos.",
