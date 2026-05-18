@@ -37,7 +37,7 @@ const TUTORIALS = [
   },
   {
     q: "O que é Direcionamento?",
-    r: "Direcionamento é um recado que o administrador envia para você. Aparece no topo do seu Dashboard. Pode conter orientações de estudo, feedback ou instruções específicas do seu comandante.",
+    r: "Direcionamento é um recado que o administrador envia para você. Aparece no topo do seu Dashboard. Pode conter orientações de estudo, feedback ou instruções específicas do seu professor/tutor.",
   },
   {
     q: "Pra que servem Favoritos e Difíceis?",
