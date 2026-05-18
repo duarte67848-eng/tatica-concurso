@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { supabase } from "../lib/supabase";
@@ -27,7 +27,8 @@ export default function Simulado({ colors }: { colors?: any }) {
     gold: "#ffd700",
     goldHover: "#ffed4a",
     green: "#22c55e",
-    red: "#ef4444"
+    red: "#ef4444",
+    blue: "#3b82f6"
   };
   const router = useRouter();
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -39,6 +40,10 @@ export default function Simulado({ colors }: { colors?: any }) {
   const [submitting, setSubmitting] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [userName, setUserName] = useState("");
+  const [alertMsg, setAlertMsg] = useState("");
+  const [flashAlert, setFlashAlert] = useState(false);
+  const prevMinRef = useRef(timeLeft);
+  const TOTAL_TIME = 240 * 60;
 
   useEffect(() => {
     const userStr = window.sessionStorage.getItem("tatica_user");
@@ -55,9 +60,19 @@ export default function Simulado({ colors }: { colors?: any }) {
   useEffect(() => {
     if (timeLeft > 0 && !submitted) {
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      const mins = Math.floor(timeLeft / 60);
+      const prevMins = Math.floor(prevMinRef.current / 60);
+      if (mins !== prevMins && [30, 10, 5, 1].includes(mins)) {
+        setAlertMsg(`⏰ ${mins} minuto${mins > 1 ? "s" : ""} restante${mins === 1 ? "!" : "s!"}`);
+        setFlashAlert(true);
+        setTimeout(() => setFlashAlert(false), 5000);
+      }
+      prevMinRef.current = timeLeft;
       return () => clearTimeout(timer);
     } else if (timeLeft === 0 && !submitted) {
-      handleSubmit();
+      setAlertMsg("⏰ TEMPO ESGOTADO!");
+      setFlashAlert(true);
+      setTimeout(() => handleSubmit(), 500);
     }
   }, [timeLeft, submitted]);
 
@@ -195,6 +210,55 @@ export default function Simulado({ colors }: { colors?: any }) {
 
   return (
     <div>
+      {/* Floating Timer Bar */}
+      <div style={{
+        position: "sticky", top: 0, zIndex: 100, background: c.backgroundSecondary,
+        borderBottom: `1px solid ${flashAlert ? c.red : c.border}`,
+        padding: "0.75rem 1rem", marginBottom: "1rem",
+        transition: "border-color 0.3s, background 0.3s",
+        backgroundImage: flashAlert ? `linear-gradient(90deg, ${c.red}22, transparent)` : "none"
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <span style={{ fontSize: "1.25rem", fontWeight: "bold", color: timeLeft < 60 ? c.red : c.gold }}>
+              ⏱️ {formatTime(timeLeft)}
+            </span>
+            <span style={{ color: c.textSecondary, fontSize: "0.8rem" }}>
+              {Object.keys(answers).length}/{questions.length} respondidas
+            </span>
+          </div>
+          {alertMsg && (
+            <div style={{ color: flashAlert ? c.red : c.gold, fontWeight: "bold", fontSize: "0.875rem", animation: flashAlert ? "pulse 1s" : "none" }}>
+              {alertMsg}
+            </div>
+          )}
+        </div>
+        <div style={{ height: "4px", background: c.backgroundTertiary, borderRadius: "2px", overflow: "hidden" }}>
+          <div style={{
+            width: `${(timeLeft / TOTAL_TIME) * 100}%`, height: "100%",
+            background: timeLeft < 60 ? c.red : timeLeft < 600 ? c.gold : c.blue,
+            borderRadius: "2px", transition: "width 1s linear, background 0.5s"
+          }} />
+        </div>
+      </div>
+
+      {/* Question Navigation Grid */}
+      <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap", marginBottom: "1rem", justifyContent: "center" }}>
+        {questions.map((q, idx) => (
+          <button
+            key={q.id}
+            onClick={() => setCurrentIndex(idx)}
+            style={{
+              width: "28px", height: "28px", borderRadius: "4px", border: "none",
+              background: answers[q.id] ? c.blue : currentIndex === idx ? c.gold : c.backgroundTertiary,
+              color: answers[q.id] || currentIndex === idx ? "#000" : c.textSecondary,
+              fontSize: "0.7rem", fontWeight: "bold", cursor: "pointer"
+            }}
+          >
+            {idx + 1}
+          </button>
+        ))}
+      </div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
         <h1 style={{ fontSize: "1.5rem", fontWeight: "bold", color: c.gold }}>
           SIMULADO OPERACIONAL - 4 HORAS
