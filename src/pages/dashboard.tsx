@@ -82,8 +82,17 @@ export default function Dashboard({ colors }: DashboardProps) {
       setUser(userObj);
       loadResults(userObj.email);
       loadRanking();
+      loadUserFromDB(userObj.email);
     }
   }, [router]);
+
+  async function loadUserFromDB(email: string) {
+    const { data } = await supabase.from("usuario").select("*").eq("email", email).single();
+    if (data) {
+      setUser(data as any);
+      sessionStorage.setItem("tatica_user", JSON.stringify(data));
+    }
+  }
 
   async function loadResults(email: string) {
     const { data } = await supabase
@@ -606,14 +615,14 @@ const tendencia = evolution.length >= 2 ? (evolution[evolution.length - 1].media
           </div>
 
           <div style={{ background: c.backgroundSecondary, border: `1px solid ${c.gold}`, borderRadius: "8px", padding: "1.5rem", marginBottom: "2rem" }}>
-            <h3 style={{ color: c.gold, marginBottom: "1rem" }}>Direcionamento do Instrutor</h3>
-            <div style={{ color: c.text, lineHeight: "1.6", fontWeight: "bold" }}>
+            <h4 style={{ color: c.gold, marginBottom: "0.5rem" }}>Direcionamento do Instrutor</h4>
+            <div style={{ color: c.text, lineHeight: "1.6" }}>
               {user.direcionamento || "Nenhum direcionamento no momento."}
             </div>
           </div>
 
           <div style={{ background: c.backgroundSecondary, border: `1px solid ${c.border}`, borderRadius: "8px", padding: "1.5rem" }}>
-            <h3 style={{ color: c.gold, marginBottom: "1rem" }}>Recomendação Estratégica</h3>
+            <h4 style={{ color: c.gold, marginBottom: "1rem" }}>Recomendação Estratégica</h4>
             <div style={{ color: c.text, lineHeight: "1.6" }}>
               {totalSimulados === 0 ? (
                 <p>Inicie seu primeiro simulado para receber recomendações personalizadas!</p>
