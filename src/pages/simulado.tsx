@@ -175,7 +175,8 @@ export default function Simulado({ colors }: { colors?: any }) {
     localStorage.setItem("ultimoResultado", JSON.stringify({
       acertos, erros, pf,
       questions: questions.length,
-      clpapScore, cpfjmScore, clipmScore, cpScore
+      clpapScore, cpfjmScore, clipmScore, cpScore,
+      detalhes: resumoDisciplinas
     }));
     router.push("/resultado");
   }

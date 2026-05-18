@@ -103,6 +103,29 @@ export default function Resultado() {
           <div style={{ fontSize: "3.75rem", fontWeight: "bold", color: "#ffd700" }}>{result.pf}</div>
         </div>
 
+        {result.detalhes && (
+          <div style={{ background: "#1a1a1a", border: "1px solid #333", borderRadius: "8px", padding: "1.5rem", marginBottom: "1.5rem" }}>
+            <div style={{ color: "#9ca3af", fontSize: "0.875rem", marginBottom: "1rem", textAlign: "center" }}>ACERTOS × ERROS POR DISCIPLINA</div>
+            {Object.entries(result.detalhes as Record<string, {acertos: number, total: number}>).map(([disc, dados]) => {
+              const erros = dados.total - dados.acertos;
+              const acertouPct = dados.total > 0 ? (dados.acertos / dados.total) * 100 : 0;
+              const errouPct = dados.total > 0 ? (erros / dados.total) * 100 : 0;
+              return (
+                <div key={disc} style={{ marginBottom: "1rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.25rem" }}>
+                    <span style={{ color: "#ffd700", fontWeight: "bold", fontSize: "0.875rem" }}>{disc}</span>
+                    <span style={{ color: "#9ca3af", fontSize: "0.8rem" }}>{dados.acertos}/{dados.total}</span>
+                  </div>
+                  <div style={{ display: "flex", height: "24px", borderRadius: "4px", overflow: "hidden" }}>
+                    <div style={{ width: `${acertouPct}%`, background: "#22c55e", transition: "width 0.5s", minWidth: dados.acertos > 0 ? "4px" : 0 }} title={`${dados.acertos} acertos`} />
+                    {erros > 0 && <div style={{ width: `${errouPct}%`, background: "#ef4444", minWidth: "4px" }} title={`${erros} erros`} />}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         <div style={{ background: "#262626", padding: "1rem", borderRadius: "8px", color: "#e5e7eb", fontSize: "0.95rem", lineHeight: "1.5", textAlign: "left", marginBottom: "1rem" }}>
           {getFeedbackEstrategico(result)}
         </div>
